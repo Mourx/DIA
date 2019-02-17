@@ -34,6 +34,10 @@ public class JoelTanker extends Tanker{
 				AvailableTasks.add(NearbyStations.get(i).getTask());
 			}
 		}
+		for(int i = 0;i<AvailableTasks.size();i++) {
+			Task task = AvailableTasks.get(i);
+
+		}
 		if(getCurrentCell(view) instanceof Station ) {
 			Station currentStation = (Station) getCurrentCell(view);
 			currentTask = currentStation.getTask();
