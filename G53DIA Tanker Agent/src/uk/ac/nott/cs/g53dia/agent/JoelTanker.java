@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import uk.ac.nott.cs.g53dia.library.Action;
 import uk.ac.nott.cs.g53dia.library.Cell;
+import uk.ac.nott.cs.g53dia.library.Point;
 import uk.ac.nott.cs.g53dia.library.Station;
 import uk.ac.nott.cs.g53dia.library.Tanker;
 import uk.ac.nott.cs.g53dia.library.Task;
@@ -15,14 +16,16 @@ public class JoelTanker extends Tanker{
 	ArrayList<Station> NearbyStations;
 	ArrayList<Well> NearbyWells;
 	ArrayList<Task> AvailableTasks;
-	
+	ArrayList<Location> Locations;
+	int currentX,currentY;
 	@Override
 	public Action senseAndAct(Cell[][] view, boolean actionFailed, long timestep) {
 		// TODO Auto-generated method stub
+		Point currentPoint = this.getPosition();
 		for(int i = 0;i < this.VIEW_RANGE;i++) {
 			for(int j = 0;j < this.VIEW_RANGE;j++) {
 				if(view[j][i] instanceof Station) {
-					NearbyStations.add((Station) view[j][i]);
+					Locations.add(new Location((Station)view[j][i],10,10));
 				}else if(view[j][i] instanceof Well) {
 					NearbyWells.add((Well) view[j][i]);
 				}
