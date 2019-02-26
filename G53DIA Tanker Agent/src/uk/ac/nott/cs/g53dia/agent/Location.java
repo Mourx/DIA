@@ -2,6 +2,7 @@ package uk.ac.nott.cs.g53dia.agent;
 
 import uk.ac.nott.cs.g53dia.library.DefaultCell;
 import uk.ac.nott.cs.g53dia.library.FuelPump;
+import uk.ac.nott.cs.g53dia.library.Point;
 import uk.ac.nott.cs.g53dia.library.Station;
 import uk.ac.nott.cs.g53dia.library.Well;
 
@@ -9,7 +10,8 @@ public class Location {
 
 	DefaultCell feature;
 	int x,y;
-	public Location(DefaultCell s, int posX, int posY) {
+	Point point;
+	public Location(DefaultCell s, Point p,int j, int i) {
 		if(s instanceof Station){
 			feature = (Station)s;
 		}
@@ -19,8 +21,9 @@ public class Location {
 		if(s instanceof FuelPump) {
 			feature = (FuelPump)s;
 		}
-		x = posX;
-		y = posY;
+		x = j;
+		y = i;
+		point = p;
 	}
 	
 	public DefaultCell getFeature() {
@@ -33,5 +36,9 @@ public class Location {
 	
 	public int getY() {
 		return y;
+	}
+	
+	public Point getPoint() {
+		return point;
 	}
 }
