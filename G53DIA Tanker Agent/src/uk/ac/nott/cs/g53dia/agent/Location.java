@@ -9,25 +9,50 @@ import uk.ac.nott.cs.g53dia.library.Well;
 public class Location {
 
 	DefaultCell feature;
+	Station station = null;
+	Well well = null;
+	FuelPump pump = null;
 	int x,y;
 	Point point;
-	public Location(DefaultCell s, Point p,int j, int i) {
-		if(s instanceof Station){
-			feature = (Station)s;
-		}
-		if(s instanceof Well) {
-			feature = (Well)s;
-		}
-		if(s instanceof FuelPump) {
-			feature = (FuelPump)s;
-		}
+	public Location(Station s, Point p,int j, int i) {
+		
+		station = s;
+		
+		
+		x = j;
+		y = i;
+		point = p;
+	}
+	public Location(FuelPump s, Point p,int j, int i) {
+	
+		
+		pump = s;
+		
+		x = j;
+		y = i;
+		point = p;
+	}
+	public Location(Well s, Point p,int j, int i) {
+		
+		
+		well = s;
+		
+		
 		x = j;
 		y = i;
 		point = p;
 	}
 	
-	public DefaultCell getFeature() {
-		return feature;
+	public Station getStation() {
+		return station;
+	}
+	
+	public Well getWell() {
+		return well;
+	}
+	
+	public FuelPump getPump() {
+		return pump;
 	}
 	
 	public int getX() {

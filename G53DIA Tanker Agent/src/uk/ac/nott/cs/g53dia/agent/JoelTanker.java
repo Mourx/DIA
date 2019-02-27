@@ -99,7 +99,7 @@ public class JoelTanker extends Tanker{
 		int tempDist = 0;
 		Location BestLoc = FuelPumpLocation;
 		for(int i = 0;i<Locations.size();i++) {
-			if(Locations.get(i).getFeature() instanceof FuelPump) {
+			if(Locations.get(i).getPump() != null) {
 				int diffX = Math.abs(currentX - Locations.get(i).x);
 				int diffY = Math.abs(currentY - Locations.get(i).y);
 				if(diffX > diffY) {
@@ -127,13 +127,15 @@ public class JoelTanker extends Tanker{
 		if(AvailableTasks != null)
 		for(int i = 0;i<AvailableTasks.size();i++) {
 			candTask = AvailableTasks.get(i);
-			if(candTask.getWasteRemaining() >=1000) {
+			if(candTask.getWasteRemaining() >=100) {
 				
 				Station candStation = getStation(candTask.getStationPosition());
 				Location candStationLocation = getLocation(candStation.getPoint());
 				Location candWellLocation = getNearestWellLocation(candStation);
-				int diffX = Math.abs(candStationLocation.x - candWellLocation.x);
-				int diffY = Math.abs(candStationLocation.y - candWellLocation.y);
+				//int diffX = Math.abs(candStationLocation.x - candWellLocation.x);
+				//int diffY = Math.abs(candStationLocation.y - candWellLocation.y);
+				int diffX = Math.abs(currentX - candWellLocation.x);
+				int diffY = Math.abs(currentY - candWellLocation.y);
 				if(diffX > diffY) {
 					tempDist = diffX;
 				}else {
@@ -159,7 +161,7 @@ public class JoelTanker extends Tanker{
 		Location BestLoc = null;
 		Location loc = getLocation(station.getPoint());
 		for(int i = 0;i<Locations.size();i++) {
-			if(Locations.get(i).getFeature() instanceof Well) {
+			if(Locations.get(i).getWell() != null) {
 				int diffX = Math.abs(loc.x - Locations.get(i).x);
 				int diffY = Math.abs(loc.y - Locations.get(i).y);
 				if(diffX > diffY) {
@@ -193,7 +195,7 @@ public class JoelTanker extends Tanker{
 	public Station getStation(Point p) {
 		for(int i = 0;i<Locations.size();i++) {
 			if(Locations.get(i).getPoint().equals(p)) {
-				return (Station)Locations.get(i).getFeature();
+				return Locations.get(i).getStation();
 			}
 		}
 		return null;
@@ -203,7 +205,7 @@ public class JoelTanker extends Tanker{
 	public Well getWell(Point p) {
 		for(int i = 0;i<Locations.size();i++) {
 			if(Locations.get(i).getPoint().equals(p)) {
-				return (Well)Locations.get(i).getFeature();
+				return Locations.get(i).getWell();
 			}
 		}
 		return null;
@@ -212,7 +214,7 @@ public class JoelTanker extends Tanker{
 	public FuelPump getPump(Point p) {
 		for(int i = 0;i<Locations.size();i++) {
 			if(Locations.get(i).getPoint().equals(p)) {
-				return (FuelPump)Locations.get(i).getFeature();
+				return Locations.get(i).getPump();
 			}
 		}
 		return null;
@@ -233,6 +235,8 @@ public class JoelTanker extends Tanker{
 			}
 			if(diffY>=1) {
 				currentY += 1;
+				currentX += 1;
+
 				return new MoveAction(MoveAction.SOUTHEAST);
 			}
 		}
@@ -272,7 +276,6 @@ public class JoelTanker extends Tanker{
 	private void ScanArea(Cell[][] view) {
 		//scan the viewable area for stations and wells
 		// save them in an arraylist of locations to store them for later
-		Locations.clear();
 		for(int i = 0;i < this.VIEW_RANGE*2;i++) {
 			for(int j = 0;j < this.VIEW_RANGE*2;j++) {
 				if(view[j][i] instanceof Station) {
@@ -295,8 +298,8 @@ public class JoelTanker extends Tanker{
 		}
 		
 		for(int i = 0;i<Locations.size();i++) {
-			if(Locations.get(i).getFeature() instanceof Station) {
-				Station station = (Station)Locations.get(i).getFeature();
+			if(Locations.get(i).getStation() != null) {
+				Station station = Locations.get(i).getStation();
 				Task task = station.getTask();
 				if(task != null) {
 					AvailableTasks.add(task);
