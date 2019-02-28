@@ -29,7 +29,7 @@ public class Simulator {
 	 * Time for which execution pauses so that GUI can update. Reducing this
 	 * value causes the simulation to run faster.
 	 */
-	private static int DELAY = 100;
+	private static int DELAY = 0;
 
 	/**
 	 * Number of timesteps to execute.
@@ -43,7 +43,7 @@ public class Simulator {
 
 	public static void main(String[] args) {
 		// Note: to obtain reproducible behaviour, you can set the Random seed
-		Random r = new Random(3);
+		Random r = new Random(1);
 		// Create an environment
 		Environment env = new Environment(Tanker.MAX_FUEL/2, r);
 		// Create a tanker
