@@ -45,6 +45,7 @@ public class JoelTanker extends Tanker{
 	Point currentPump = FUEL_PUMP_LOCATION;
 	Location FuelPumpLocation = null;
 	Location targetWell = null;
+	boolean bFuelTime = false;
 	@Override
 	public Action senseAndAct(Cell[][] view, boolean actionFailed, long timestep) {
 		// TODO Auto-generated method stub
@@ -57,14 +58,20 @@ public class JoelTanker extends Tanker{
 			currentTask = null;
 		}
 		
-		
-		if(this.getFuelLevel()<=MovesToFuel*2 +6) {
+		if(currentTask!=null) {
+			if(CheckIfInRange(Locations.get(getStationID(currentTask.getStationPosition())))) {
+				bFuelTime = true;
+			}
+		}
+		if(this.getFuelLevel()<=MovesToFuel*2 +6) bFuelTime = true;
+		if(bFuelTime){
 			MoveAction action = JoelMoveToward(FuelPumpLocation);
 			if(action != null) {
 				MovesToFuel-= 1;
 				return action;
 			}else {
 				currentTask = getBestTask();
+				bFuelTime = false;
 				return new RefuelAction();
 			}
 		}else if(currentTask != null) {
@@ -74,7 +81,9 @@ public class JoelTanker extends Tanker{
 					MovesToFuel+= 1;
 					return action;
 				}else {
-					return new LoadWasteAction(currentTask);
+					Task tempTask = currentTask;
+					currentTask = null;
+					return new LoadWasteAction(tempTask);
 				}
 			}else {
 				
@@ -96,19 +105,60 @@ public class JoelTanker extends Tanker{
 		}
 	}
 	
+	public boolean CheckIfInRange(Location there) {
+		int distanceThere = DistanceTo(there);
+		int distanceToFuel = DistanceTo(there,getNearestPump(there));
+		if(distanceThere + distanceToFuel > MovesToFuel*2 +2) {
+			return true;
+		}
+		return false;
+	}
+	
+	public int DistanceTo(Location here, Location there) {
+		int diffX = Math.abs(here.x - there.x);
+		int diffY = Math.abs(here.y - there.y);
+		if(diffX > diffY) {
+			return diffX;
+		}else {
+			return diffY;
+		}
+	}
+	
+	public int DistanceTo(Location loc) {
+		int diffX = Math.abs(currentX - loc.x);
+		int diffY = Math.abs(currentY - loc.y);
+		if(diffX > diffY) {
+			return diffX;
+		}else {
+			return diffY;
+		}
+	}
+	public Location getNearestPump(Location here) {
+		int smallestDist = DistanceTo(here);
+		int tempDist = 0;
+		Location BestLoc = FuelPumpLocation;
+		for(int i = 0;i<Locations.size();i++) {
+			if(Locations.get(i).getPump() != null) {
+				tempDist = DistanceTo(here,Locations.get(i));
+				if(tempDist<= smallestDist) {
+					smallestDist = tempDist;
+					BestLoc = Locations.get(i);
+				}else if (tempDist == smallestDist){
+					//check closest to current refuel if equal
+				}
+			}
+		}
+		MovesToFuel = smallestDist;
+		return BestLoc;
+	}
+	
 	public Location getNearestPump() {
 		int smallestDist = MovesToFuel;
 		int tempDist = 0;
 		Location BestLoc = FuelPumpLocation;
 		for(int i = 0;i<Locations.size();i++) {
 			if(Locations.get(i).getPump() != null) {
-				int diffX = Math.abs(currentX - Locations.get(i).x);
-				int diffY = Math.abs(currentY - Locations.get(i).y);
-				if(diffX > diffY) {
-					tempDist = diffX;
-				}else {
-					tempDist = diffY;
-				}
+				tempDist = DistanceTo(Locations.get(i));
 				if(tempDist<= smallestDist) {
 					smallestDist = tempDist;
 					BestLoc = Locations.get(i);
@@ -134,15 +184,8 @@ public class JoelTanker extends Tanker{
 				Station candStation = getStation(candTask.getStationPosition());
 				Location candStationLocation = getLocation(candStation.getPoint());
 				Location candWellLocation = getNearestWellLocation(candStation);
-				//int diffX = Math.abs(candStationLocation.x - candWellLocation.x);
-				//int diffY = Math.abs(candStationLocation.y - candWellLocation.y);
-				int diffX = Math.abs(currentX - candStationLocation.x);
-				int diffY = Math.abs(currentY - candStationLocation.y);
-				if(diffX > diffY) {
-					tempDist = diffX;
-				}else {
-					tempDist = diffY;
-				}
+				
+				tempDist = DistanceTo(candStationLocation);
 				if(tempDist< smallestDist) {
 					smallestDist = tempDist;
 					bestTask = candTask;
