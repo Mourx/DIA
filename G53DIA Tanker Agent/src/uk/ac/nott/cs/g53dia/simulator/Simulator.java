@@ -56,6 +56,7 @@ public class Simulator {
 		while (env.getTimestep() < DURATION) {
 			// Advance the environment timestep
 			env.tick();
+			//System.out.println(" at timestep " + env.getTimestep() + " , score: " + tank.getScore());
 			// Update the GUI
 			tv.tick(env);
 			// Get the current view of the tanker

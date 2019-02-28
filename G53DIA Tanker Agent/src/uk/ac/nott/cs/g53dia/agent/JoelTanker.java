@@ -48,11 +48,11 @@ public class JoelTanker extends Tanker{
 	@Override
 	public Action senseAndAct(Cell[][] view, boolean actionFailed, long timestep) {
 		// TODO Auto-generated method stub
-		currentPoint = (Point)this.getPosition().clone();
+		currentPoint = (Point)this.getPosition();
 		if(FuelPumpLocation == null) FuelPumpLocation = new Location((FuelPump)this.getCurrentCell(view),this.getPosition(),0,0);
 		FuelPumpLocation = getNearestPump();
 		ScanArea(view);
-		currentTask = getBestTask();
+		if(currentTask ==null)currentTask = getBestTask();
 		if(currentTask != null && this.getWasteLevel() <= 0 && currentTask.isComplete()) {
 			currentTask = null;
 		}
@@ -64,10 +64,20 @@ public class JoelTanker extends Tanker{
 				MovesToFuel-= 1;
 				return action;
 			}else {
+				currentTask = getBestTask();
 				return new RefuelAction();
 			}
 		}else if(currentTask != null) {
-			if(this.getWasteLevel()>0) {
+			if(this.getWasteLevel() <900 && currentTask.getWasteRemaining() >0) {
+				MoveAction action = JoelMoveToward(getLocation(currentTask.getStationPosition()));
+				if(action!=null){
+					MovesToFuel+= 1;
+					return action;
+				}else {
+					return new LoadWasteAction(currentTask);
+				}
+			}else {
+				
 				targetWell = getNearestWellLocation(getStation(currentTask.getStationPosition()));
 				MoveAction action = JoelMoveToward(targetWell);
 				if(action != null) {
@@ -75,14 +85,6 @@ public class JoelTanker extends Tanker{
 					return action; 
 				}else {
 					return new DisposeWasteAction();
-				}
-			}else {
-				MoveAction action = JoelMoveToward(getLocation(currentTask.getStationPosition()));
-				if(action!=null){
-					MovesToFuel+= 1;
-					return action;
-				}else {
-					return new LoadWasteAction(currentTask);
 				}
 			}
 			
@@ -134,8 +136,8 @@ public class JoelTanker extends Tanker{
 				Location candWellLocation = getNearestWellLocation(candStation);
 				//int diffX = Math.abs(candStationLocation.x - candWellLocation.x);
 				//int diffY = Math.abs(candStationLocation.y - candWellLocation.y);
-				int diffX = Math.abs(currentX - candWellLocation.x);
-				int diffY = Math.abs(currentY - candWellLocation.y);
+				int diffX = Math.abs(currentX - candStationLocation.x);
+				int diffY = Math.abs(currentY - candStationLocation.y);
 				if(diffX > diffY) {
 					tempDist = diffX;
 				}else {
@@ -162,8 +164,8 @@ public class JoelTanker extends Tanker{
 		Location loc = getLocation(station.getPoint());
 		for(int i = 0;i<Locations.size();i++) {
 			if(Locations.get(i).getWell() != null) {
-				int diffX = Math.abs(loc.x - Locations.get(i).x);
-				int diffY = Math.abs(loc.y - Locations.get(i).y);
+				int diffX = Math.abs(currentX - Locations.get(i).x);
+				int diffY = Math.abs(currentY - Locations.get(i).y);
 				if(diffX > diffY) {
 					tempDist = diffX;
 				}else {
@@ -201,6 +203,15 @@ public class JoelTanker extends Tanker{
 		return null;
 	}
 	
+	public int getStationID(Point p) {
+		for(int i = 0;i<Locations.size();i++) {
+			if(Locations.get(i).getPoint().equals(p)) {
+				return Locations.get(i).getID();
+			}
+		}
+		return -1;
+	}
+	
 	//get a well with point = p;
 	public Well getWell(Point p) {
 		for(int i = 0;i<Locations.size();i++) {
@@ -234,7 +245,7 @@ public class JoelTanker extends Tanker{
 				return new MoveAction(MoveAction.EAST);
 			}
 			if(diffY>=1) {
-				currentY += 1;
+				currentY -= 1;
 				currentX += 1;
 
 				return new MoveAction(MoveAction.SOUTHEAST);
@@ -280,9 +291,14 @@ public class JoelTanker extends Tanker{
 			for(int j = 0;j < this.VIEW_RANGE*2;j++) {
 				if(view[j][i] instanceof Station) {
 					Station station = (Station)view[j][i];
-					if(getStation(station.getPoint()) == null) {
-						Locations.add(new Location(station,station.getPoint(),j-20+currentX,20-i+currentY));
-					}
+					//if(getStation(station.getPoint()) == null) {
+						int id = getStationID(station.getPoint());
+						if(id != -1) {
+							Locations.set(id, new Location(station,station.getPoint(),j-20+currentX,20-i+currentY,id));
+						}else {
+							Locations.add(new Location(station,station.getPoint(),j-20+currentX,20-i+currentY,Locations.size()));
+						}
+					//}
 				}else if(view[j][i] instanceof Well) {
 					Well well = (Well)view[j][i];
 					if(getWell(well.getPoint()) == null) {

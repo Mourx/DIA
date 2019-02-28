@@ -14,7 +14,8 @@ public class Location {
 	FuelPump pump = null;
 	int x,y;
 	Point point;
-	public Location(Station s, Point p,int j, int i) {
+	protected int id;
+	public Location(Station s, Point p,int j, int i,int value) {
 		
 		station = s;
 		
@@ -22,7 +23,9 @@ public class Location {
 		x = j;
 		y = i;
 		point = p;
+		id = value;
 	}
+	
 	public Location(FuelPump s, Point p,int j, int i) {
 	
 		
@@ -53,6 +56,10 @@ public class Location {
 	
 	public FuelPump getPump() {
 		return pump;
+	}
+	
+	public int getID() {
+		return id;
 	}
 	
 	public int getX() {
