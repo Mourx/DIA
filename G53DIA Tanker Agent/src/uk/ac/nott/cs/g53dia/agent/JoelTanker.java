@@ -9,6 +9,7 @@ import uk.ac.nott.cs.g53dia.library.DisposeWasteAction;
 import uk.ac.nott.cs.g53dia.library.FuelPump;
 import uk.ac.nott.cs.g53dia.library.LoadWasteAction;
 import uk.ac.nott.cs.g53dia.library.MoveAction;
+import uk.ac.nott.cs.g53dia.library.MoveTowardsAction;
 import uk.ac.nott.cs.g53dia.library.Point;
 import uk.ac.nott.cs.g53dia.library.RefuelAction;
 import uk.ac.nott.cs.g53dia.library.Station;
@@ -34,28 +35,39 @@ public class JoelTanker extends Tanker{
 		this.r = r;
 	}
 	
-	private Point currentPoint;
 	Task currentTask = null;
 	ArrayList<Task> AvailableTasks = new ArrayList<Task>();
 	ArrayList<Location> Locations = new ArrayList<Location>();
 	int currentX,currentY = 0;
+	Point prevPoint;
+	Point currentPoint = null;
 	int MovesLeft = 0;
+	Location targetLoc = null;
 	Station targetStation = null;
+
 	int MovesToFuel = 0;
+	int distRemaining = 0;
 	Point currentPump = FUEL_PUMP_LOCATION;
 	Location FuelPumpLocation = null;
 	Location targetWell = null;
 	boolean bFuelTime = false;
+	boolean bFailed = false;
 	int Direction = MoveAction.NORTHEAST;
 	@Override
 	public Action senseAndAct(Cell[][] view, boolean actionFailed, long timestep) {
 		// TODO Auto-generated method stub
-		currentPoint = (Point)this.getPosition();
+		currentPoint = this.getPosition();
 		if(FuelPumpLocation == null) FuelPumpLocation = new Location((FuelPump)this.getCurrentCell(view),this.getPosition(),0,0);
 		FuelPumpLocation = getNearestPump();
-
+		if(currentPoint != prevPoint && targetLoc != null) {
+			incrementXY(targetLoc);
+			MovesToFuel+= 1;
+			bFailed = false;
+		}else{
+			bFailed = true;			
+		}
 		ScanArea(view);
-			
+		
 		currentTask = getBestTask();
 
 		if(currentTask!=null) {
@@ -75,7 +87,7 @@ public class JoelTanker extends Tanker{
 			}
 		}
 		if(bFuelTime){
-			MoveAction action = JoelMoveToward(FuelPumpLocation);
+			MoveAction action = (MoveAction)JoelMoveToward(FuelPumpLocation);
 			if(action != null) {
 				MovesToFuel-= 1;
 				return action;
@@ -86,9 +98,8 @@ public class JoelTanker extends Tanker{
 		}else if(currentTask != null) {
 			if(this.getWasteLevel() <1000 && currentTask.getWasteRemaining()<= 1000-this.getWasteLevel()) {
 				
-				MoveAction action = JoelMoveToward(getLocation(currentTask.getStationPosition()));
+				Action action = JoelMoveToward(getLocation(currentTask.getStationPosition()));
 				if(action!=null){
-					MovesToFuel+= 1;
 					return action;
 				}else {
 					//set currentTask to null so we can find next task and deliver to well near it
@@ -104,9 +115,8 @@ public class JoelTanker extends Tanker{
 				 * JoelMoveToward(FuelPumpLocation); MovesToFuel-= 1; bFuelTime = true; return
 				 * action; }
 				 */
-				MoveAction action = JoelMoveToward(targetWell);
+				Action action = JoelMoveToward(targetWell);
 				if(action != null) {
-					MovesToFuel+= 1;
 					return action; 
 				}else {
 					return new DisposeWasteAction();
@@ -114,7 +124,6 @@ public class JoelTanker extends Tanker{
 			}
 			
 		}else {
-			MovesToFuel+= 1;
 			if(Direction == 4) {
 				currentX += 1;
 				currentY += 1;
@@ -128,6 +137,8 @@ public class JoelTanker extends Tanker{
 				currentX -= 1;
 				currentY -= 1;
 			}
+			
+			
 			return new MoveAction(Direction);
 		}
 	}
@@ -167,7 +178,7 @@ public class JoelTanker extends Tanker{
 		for(int i = 0;i<Locations.size();i++) {
 			if(Locations.get(i).getPump() != null) {
 				tempDist = DistanceTo(here,Locations.get(i));
-				if(tempDist< smallestDist) {
+				if(tempDist<= smallestDist) {
 					smallestDist = tempDist;
 					BestLoc = Locations.get(i);
 				}else if (tempDist == smallestDist){
@@ -186,7 +197,7 @@ public class JoelTanker extends Tanker{
 		for(int i = 0;i<Locations.size();i++) {
 			if(Locations.get(i).getPump() != null) {
 				tempDist = DistanceTo(Locations.get(i));
-				if(tempDist< smallestDist) {
+				if(tempDist<=smallestDist) {
 					smallestDist = tempDist;
 
 					BestLoc = Locations.get(i);
@@ -204,9 +215,9 @@ public class JoelTanker extends Tanker{
 		int tempDist = 0;
 		Location BestLoc = null;
 		for(int i = 0;i<Locations.size();i++) {
-			if(Locations.get(i).getStation() != null && Locations.get(i).getStation().getTask() != null && Locations.get(i).getStation().getTask().getWasteRemaining() > 0) {
+			if(Locations.get(i).getStation() != null && Locations.get(i).getStation().getPoint() != here.getPoint()) {
 				tempDist = DistanceTo(here,Locations.get(i));
-				if(tempDist< smallestDist) {
+				if(tempDist<= smallestDist) {
 					smallestDist = tempDist;
 					BestLoc = Locations.get(i);
 				}else if (tempDist == smallestDist){
@@ -240,8 +251,8 @@ public class JoelTanker extends Tanker{
 						Location candStationLocation = getLocation(candStation.getPoint());
 						Location candWellLocation = getNearestWellLocation(candStation);
 						tempDist = DistanceTo(candStationLocation);
-						//nextDist = DistanceTo(candStationLocation,getNearestStation(candStationLocation));
-						//tempDist = tempDist + nextDist*0;
+						nextDist = DistanceTo(candStationLocation,getNearestStation(candStationLocation));
+						tempDist = tempDist + nextDist*0.0;
 						if(tempDist< smallestDist) { 
 							smallestDist = tempDist; 
 							bestTask = candTask;
@@ -262,7 +273,7 @@ public class JoelTanker extends Tanker{
 		Location loc = getLocation(station.getPoint());
 		for(int i = 0;i<Locations.size();i++) {
 			if(Locations.get(i).getWell() != null) {
-				tempDist = DistanceTo(getLocation(station.getPoint()),getLocation(Locations.get(i).getWell().getPoint()));
+				tempDist = DistanceTo(getLocation(Locations.get(i).getWell().getPoint()));
 				if(tempDist< smallestDist) {
 					smallestDist = tempDist;
 					BestLoc = Locations.get(i);
@@ -323,53 +334,128 @@ public class JoelTanker extends Tanker{
 		return null;
 	}
 	
-	public MoveAction JoelMoveToward(Location loc) {
+	public void incrementXY(Location loc) {
 		int diffX = currentX-loc.getX();
 		int diffY = currentY-loc.getY();
 		if(diffX <=-1) {
 			if(diffY<=-1) {
 				currentX += 1;
 				currentY += 1;
-				return new MoveAction(MoveAction.NORTHEAST);
 			}
 			if(diffY==0) {
 				currentX += 1;
-				return new MoveAction(MoveAction.EAST);
+				
 			}
 			if(diffY>=1) {
 				currentY -= 1;
 				currentX += 1;
-
-				return new MoveAction(MoveAction.SOUTHEAST);
+				
 			}
 		}
 		if(diffX ==0) {
 			if(diffY<=-1) {
 				currentY += 1;
-				return new MoveAction(MoveAction.NORTH);
+				
 			}
 			if(diffY==0) {
-				return null;
 			}
 			if(diffY>=1) {
 				currentY -= 1;
-				return new MoveAction(MoveAction.SOUTH);
+				
 			}
 		}
 		if(diffX >= 1) {
 			if(diffY<=-1) {
 				currentX -= 1;
 				currentY += 1;
-				return new MoveAction(MoveAction.NORTHWEST);
+				
 			}
 			if(diffY==0) {
 				currentX -= 1;
-				return new MoveAction(MoveAction.WEST);
 			}
 			if(diffY>=1) {
 				currentX -= 1;
 				currentY -= 1;
-				return new MoveAction(MoveAction.SOUTHWEST);
+				
+			}
+		}
+	}
+	
+	public Action JoelMoveToward(Location loc) {
+		int diffX = currentX-loc.getX();
+		int diffY = currentY-loc.getY();
+		prevPoint = currentPoint;
+		targetLoc = loc;
+		if(diffX <=-1) {
+			if(diffY<=-1) {
+				
+				if(bFuelTime || bFailed) {
+					return new MoveAction(MoveAction.NORTHEAST);
+				}else {
+					distRemaining = DistanceTo(loc);
+					return new MoveTowardsAction(loc.point);
+				}
+			}
+			if(diffY==0) {
+			
+				if(bFuelTime || bFailed) {
+					return new MoveAction(MoveAction.EAST);
+				}else {
+					return new MoveTowardsAction(loc.point);
+				}
+			}
+			if(diffY>=1) {
+				
+				if(bFuelTime || bFailed) {
+					return new MoveAction(MoveAction.SOUTHEAST);
+				}else {
+					return new MoveTowardsAction(loc.point);
+				}
+			}
+		}
+		if(diffX ==0) {
+			if(diffY<=-1) {
+				if(bFuelTime || bFailed) {
+					return new MoveAction(MoveAction.NORTH);
+				}else {
+					return new MoveTowardsAction(loc.point);
+				}
+			}
+			if(diffY==0) {
+				return null;
+			}
+			if(diffY>=1) {
+				if(bFuelTime || bFailed) {
+					return new MoveAction(MoveAction.SOUTH);
+				}else {
+					return new MoveTowardsAction(loc.point);
+				}
+			}
+		}
+		if(diffX >= 1) {
+			if(diffY<=-1) {
+	
+				if(bFuelTime || bFailed) {
+					return new MoveAction(MoveAction.NORTHWEST);
+				}else {
+					return new MoveTowardsAction(loc.point);
+				}
+			}
+			if(diffY==0) {
+
+				if(bFuelTime || bFailed) {
+					return new MoveAction(MoveAction.WEST);
+				}else {
+					return new MoveTowardsAction(loc.point);
+				}
+			}
+			if(diffY>=1) {
+
+				if(bFuelTime || bFailed) {
+					return new MoveAction(MoveAction.SOUTHWEST);
+				}else {
+					return new MoveTowardsAction(loc.point);
+				}
 			}
 		}
 		return null;
