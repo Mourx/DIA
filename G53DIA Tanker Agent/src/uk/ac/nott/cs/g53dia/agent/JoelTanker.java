@@ -241,6 +241,7 @@ public class JoelTanker extends Tanker{
 		double pumpDist = 0;
 		Task candTask;
 		Task bestTask = null;
+		if(currentTask !=null && CheckIfInRange(getLocation(currentTask.getStationPosition()))) bestTask = currentTask;
 		if(AvailableTasks != null)
 		for(int i = 0;i<AvailableTasks.size();i++) {
 			candTask = AvailableTasks.get(i);
