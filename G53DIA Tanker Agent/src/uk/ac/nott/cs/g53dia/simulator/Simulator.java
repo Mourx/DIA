@@ -42,7 +42,8 @@ public class Simulator {
     private static boolean actionFailed = false;
 
 	public static void main(String[] args) {
-		for(int i = 0;i<10;i++) {
+		double total = 0;
+		for(int i = 0;i<30;i++) {
 			// Note: to obtain reproducible behaviour, you can set the Random seed
 			Random r = new Random(i);
 			// Create an environment
@@ -80,6 +81,9 @@ public class Simulator {
 				}
 			}
 			System.out.println("Simulation completed at timestep " + env.getTimestep() + " , score: " + tank.getScore());
+			total+= tank.getScore();
 		}
+		total = total/30;
+		System.out.println("Average over 30: " + total);
 	}
 }

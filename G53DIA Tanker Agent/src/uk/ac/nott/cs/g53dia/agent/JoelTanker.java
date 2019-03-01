@@ -46,6 +46,7 @@ public class JoelTanker extends Tanker{
 	Location FuelPumpLocation = null;
 	Location targetWell = null;
 	boolean bFuelTime = false;
+	boolean bDisposeTime = false;
 	int Direction = MoveAction.NORTHEAST;
 	@Override
 	public Action senseAndAct(Cell[][] view, boolean actionFailed, long timestep) {
@@ -57,14 +58,19 @@ public class JoelTanker extends Tanker{
 		ScanArea(view);
 			
 		currentTask = getBestTask();
+		MovesToFuel = DistanceTo(FuelPumpLocation);
 
+		
 		if(currentTask!=null) {
-			if(!CheckIfInRange(Locations.get(getStationID(currentTask.getStationPosition())))) {
-				bFuelTime = true;
+			if(!bDisposeTime && !CheckIfInRange(Locations.get(getStationID(currentTask.getStationPosition())))) {
+				if(this.getFuelLevel() < 200) {
+					bFuelTime = true;
+				}else{
+					currentTask =null;
+				};
 			}
 		}
-		MovesToFuel = DistanceTo(FuelPumpLocation);
-		if(this.getFuelLevel()<MovesToFuel*2+6) {
+		if(this.getFuelLevel() <= MovesToFuel*2 +4) {
 			
 			if(!bFuelTime) {
 				Direction += 1;
@@ -74,6 +80,7 @@ public class JoelTanker extends Tanker{
 				bFuelTime = true;
 			}
 		}
+		
 		if(bFuelTime){
 			MoveAction action = JoelMoveToward(FuelPumpLocation);
 			if(action != null) {
@@ -99,16 +106,20 @@ public class JoelTanker extends Tanker{
 			}else {
 				
 				targetWell = getNearestWellLocation(getStation(currentTask.getStationPosition()));
+				bDisposeTime = true;
+				
 				/*
 				 * if(!CheckIfInRange(targetWell)) { MoveAction action =
 				 * JoelMoveToward(FuelPumpLocation); MovesToFuel-= 1; bFuelTime = true; return
 				 * action; }
 				 */
+				 
 				MoveAction action = JoelMoveToward(targetWell);
 				if(action != null) {
 					MovesToFuel+= 1;
 					return action; 
 				}else {
+					bDisposeTime = false;
 					return new DisposeWasteAction();
 				}
 			}
@@ -202,15 +213,18 @@ public class JoelTanker extends Tanker{
 	public Location getNearestStation(Location here) {
 		int smallestDist = 99999;
 		int tempDist = 0;
-		Location BestLoc = null;
+		Location BestLoc = here;
 		for(int i = 0;i<Locations.size();i++) {
 			if(Locations.get(i).getStation() != null && Locations.get(i).getStation().getTask() != null && Locations.get(i).getStation().getTask().getWasteRemaining() > 0) {
+				
 				tempDist = DistanceTo(here,Locations.get(i));
-				if(tempDist< smallestDist) {
-					smallestDist = tempDist;
-					BestLoc = Locations.get(i);
-				}else if (tempDist == smallestDist){
-					//check closest to current refuel if equal
+				if(tempDist != 0) {
+					if(tempDist< smallestDist) {
+						smallestDist = tempDist;
+						BestLoc = Locations.get(i);
+					}else if (tempDist == smallestDist){
+						//check closest to current refuel if equal
+					}
 				}
 			}
 		}
@@ -240,9 +254,9 @@ public class JoelTanker extends Tanker{
 						Location candStationLocation = getLocation(candStation.getPoint());
 						Location candWellLocation = getNearestWellLocation(candStation);
 						tempDist = DistanceTo(candStationLocation);
-						//nextDist = DistanceTo(candStationLocation,getNearestStation(candStationLocation));
-						//tempDist = tempDist + nextDist*0;
-						if(tempDist< smallestDist) { 
+						nextDist = DistanceTo(candStationLocation,getNearestStation(candStationLocation));
+						tempDist = tempDist + nextDist*2;
+						if(tempDist<= smallestDist) { 
 							smallestDist = tempDist; 
 							bestTask = candTask;
 						}
@@ -258,12 +272,14 @@ public class JoelTanker extends Tanker{
 	public Location getNearestWellLocation(Station station) {
 		int smallestDist = 9999;
 		int tempDist = 0;
+		int nextDist;
 		Location BestLoc = null;
 		Location loc = getLocation(station.getPoint());
 		for(int i = 0;i<Locations.size();i++) {
 			if(Locations.get(i).getWell() != null) {
 				tempDist = DistanceTo(getLocation(Locations.get(i).getWell().getPoint()));
-				if(tempDist< smallestDist) {
+				nextDist = DistanceTo(Locations.get(i),FuelPumpLocation);
+				if(tempDist<= smallestDist) {
 					smallestDist = tempDist;
 					BestLoc = Locations.get(i);
 				}else if (tempDist == smallestDist){
