@@ -42,42 +42,44 @@ public class Simulator {
     private static boolean actionFailed = false;
 
 	public static void main(String[] args) {
-		// Note: to obtain reproducible behaviour, you can set the Random seed
-		Random r = new Random(1);
-		// Create an environment
-		Environment env = new Environment(Tanker.MAX_FUEL/2, r);
-		// Create a tanker
-		//Tanker tank = new DemoTanker(r);
-		Tanker tank = new JoelTanker(r);
-		// Create a GUI window to show the tanker
-		TankerViewer tv = new TankerViewer(tank);
-		tv.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
-		// Start executing the Tanker
-		while (env.getTimestep() < DURATION) {
-			// Advance the environment timestep
-			env.tick();
-			//System.out.println(" at timestep " + env.getTimestep() + " , score: " + tank.getScore());
-			// Update the GUI
-			tv.tick(env);
-			// Get the current view of the tanker
-			Cell[][] view = env.getView(tank.getPosition(), Tanker.VIEW_RANGE);
-			// Let the tanker choose an action
-			Action act = tank.senseAndAct(view, actionFailed, env.getTimestep());
-			// Try to execute the action
-			try {
-				actionFailed = act.execute(env, tank);
-			} catch (OutOfFuelException ofe) {
-				System.err.println(ofe.getMessage());
-				System.exit(-1);
-			} catch (IllegalActionException afe) {
-				System.err.println(afe.getMessage());
-				actionFailed = false;
+		for(int i = 0;i<10;i++) {
+			// Note: to obtain reproducible behaviour, you can set the Random seed
+			Random r = new Random(i);
+			// Create an environment
+			Environment env = new Environment(Tanker.MAX_FUEL/2, r);
+			// Create a tanker
+			//Tanker tank = new DemoTanker(r);
+			Tanker tank = new JoelTanker(r);
+			// Create a GUI window to show the tanker
+			//TankerViewer tv = new TankerViewer(tank);
+			//tv.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
+			// Start executing the Tanker
+			while (env.getTimestep() < DURATION) {
+				// Advance the environment timestep
+				env.tick();
+				//System.out.println(" at timestep " + env.getTimestep() + " , score: " + tank.getScore());
+				// Update the GUI
+				//tv.tick(env);
+				// Get the current view of the tanker
+				Cell[][] view = env.getView(tank.getPosition(), Tanker.VIEW_RANGE);
+				// Let the tanker choose an action
+				Action act = tank.senseAndAct(view, actionFailed, env.getTimestep());
+				// Try to execute the action
+				try {
+					actionFailed = act.execute(env, tank);
+				} catch (OutOfFuelException ofe) {
+					System.err.println(ofe.getMessage());
+					System.exit(-1);
+				} catch (IllegalActionException afe) {
+					System.err.println(afe.getMessage());
+					actionFailed = false;
+				}
+				try {
+					Thread.sleep(DELAY);
+				} catch (Exception e) {
+				}
 			}
-			try {
-				Thread.sleep(DELAY);
-			} catch (Exception e) {
-			}
+			System.out.println("Simulation completed at timestep " + env.getTimestep() + " , score: " + tank.getScore());
 		}
-		System.out.println("Simulation completed at timestep " + env.getTimestep() + " , score: " + tank.getScore());
 	}
 }
