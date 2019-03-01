@@ -167,7 +167,7 @@ public class JoelTanker extends Tanker{
 		for(int i = 0;i<Locations.size();i++) {
 			if(Locations.get(i).getPump() != null) {
 				tempDist = DistanceTo(here,Locations.get(i));
-				if(tempDist< smallestDist) {
+				if(tempDist<= smallestDist) {
 					smallestDist = tempDist;
 					BestLoc = Locations.get(i);
 				}else if (tempDist == smallestDist){
@@ -186,7 +186,7 @@ public class JoelTanker extends Tanker{
 		for(int i = 0;i<Locations.size();i++) {
 			if(Locations.get(i).getPump() != null) {
 				tempDist = DistanceTo(Locations.get(i));
-				if(tempDist< smallestDist) {
+				if(tempDist<= smallestDist) {
 					smallestDist = tempDist;
 
 					BestLoc = Locations.get(i);
@@ -262,7 +262,7 @@ public class JoelTanker extends Tanker{
 		Location loc = getLocation(station.getPoint());
 		for(int i = 0;i<Locations.size();i++) {
 			if(Locations.get(i).getWell() != null) {
-				tempDist = DistanceTo(getLocation(station.getPoint()),getLocation(Locations.get(i).getWell().getPoint()));
+				tempDist = DistanceTo(getLocation(Locations.get(i).getWell().getPoint()));
 				if(tempDist< smallestDist) {
 					smallestDist = tempDist;
 					BestLoc = Locations.get(i);
