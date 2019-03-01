@@ -146,7 +146,7 @@ public class JoelTanker extends Tanker{
 	public boolean CheckIfInRange(Location there) {
 		int distanceThere = DistanceTo(there);
 		int distanceToFuel = DistanceTo(there,getNearestPump(there));
-		if((distanceThere + distanceToFuel)*2 < this.getFuelLevel()) {
+		if((distanceThere + distanceToFuel)*2 <= this.getFuelLevel() + 4) {
 			return true;
 		}
 		return false;
@@ -238,8 +238,9 @@ public class JoelTanker extends Tanker{
 		double nextDist = 0;
 		double bestEfficiency = 8888;
 		double efficiency = 0;
+		double pumpDist = 0;
 		Task candTask;
-		Task bestTask = currentTask;
+		Task bestTask = null;
 		if(AvailableTasks != null)
 		for(int i = 0;i<AvailableTasks.size();i++) {
 			candTask = AvailableTasks.get(i);
@@ -255,7 +256,8 @@ public class JoelTanker extends Tanker{
 						Location candWellLocation = getNearestWellLocation(candStation);
 						tempDist = DistanceTo(candStationLocation);
 						nextDist = DistanceTo(candStationLocation,getNearestStation(candStationLocation));
-						tempDist = tempDist + nextDist*2;
+						pumpDist = DistanceTo(candStationLocation,getNearestPump(candStationLocation));
+						tempDist = tempDist + nextDist*0.1 + pumpDist*0.2;
 						if(tempDist<= smallestDist) { 
 							smallestDist = tempDist; 
 							bestTask = candTask;
