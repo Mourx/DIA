@@ -29,7 +29,7 @@ public class Simulator {
 	 * Time for which execution pauses so that GUI can update. Reducing this
 	 * value causes the simulation to run faster.
 	 */
-	private static int DELAY = 10;
+	private static int DELAY = 0;
 
 	/**
 	 * Number of timesteps to execute.
@@ -42,10 +42,10 @@ public class Simulator {
     private static boolean actionFailed = false;
 
 	public static void main(String[] args) {
-		//double total = 0;
-		//for(int i = 0;i<30;i++) {
+		double total = 0;
+		for(int i = 0;i<90;i++) {
 			// Note: to obtain reproducible behaviour, you can set the Random seed
-			Random r = new Random(17);
+			Random r = new Random(i);
 			// Create an environment
 			Environment env = new Environment(Tanker.MAX_FUEL/2, r);
 			// Create a tanker
@@ -81,9 +81,9 @@ public class Simulator {
 				}
 			}
 			System.out.println("Simulation completed at timestep " + env.getTimestep() + " , score: " + tank.getScore());
-			//total+= tank.getScore();
-	//	}
-	//	total = total/30;
-	//	System.out.println("Average over 30: " + total);
+			total+= tank.getScore();
+		}
+		total = total/90;
+		System.out.println("Average over 30: " + total);
 	}
 }

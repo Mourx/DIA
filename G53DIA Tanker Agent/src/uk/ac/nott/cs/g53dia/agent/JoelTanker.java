@@ -38,6 +38,7 @@ public class JoelTanker extends Tanker{
 	Task currentTask = null;
 	ArrayList<Task> AvailableTasks = new ArrayList<Task>();
 	ArrayList<Location> Locations = new ArrayList<Location>();
+	ArrayList<Cluster> Clusters = new ArrayList<Cluster>();
 	int currentX,currentY = 0;
 	int MovesLeft = 0;
 	Station targetStation = null;
@@ -52,6 +53,7 @@ public class JoelTanker extends Tanker{
 	boolean bHomeTime = false;
 	boolean bFindPumps = true;
 	int Direction = MoveAction.NORTHEAST;
+	
 	@Override
 	public Action senseAndAct(Cell[][] view, boolean actionFailed, long timestep) {
 		// TODO Auto-generated method stub
@@ -67,6 +69,8 @@ public class JoelTanker extends Tanker{
 		}
 		
 		ScanArea(view);
+		CompileClusters();
+		UpdateClusterWells();
 		if(stepNumber >= 3250) {
 			bHomeTime = !bHomeTime;
 			stepNumber = 0;
@@ -126,27 +130,7 @@ public class JoelTanker extends Tanker{
 		//}
 		if(bFindPumps) {
 			MovesToFuel+= 1;
-			if(Direction == 0) {
-				currentY += 1;
-			}else if(Direction == 1) {
-				currentY -= 1;
-			}else if(Direction == 2) {
-				currentX += 1;
-			}else if(Direction == 3) {
-				currentX -= 1;
-			}else if(Direction == 4) {
-				currentX += 1;
-				currentY += 1;
-			}else if(Direction == 5) {
-				currentX -= 1;
-				currentY += 1;
-			}else if(Direction == 6) {
-				currentX += 1;
-				currentY -= 1;
-			}else if(Direction == 7) {
-				currentX -= 1;
-				currentY -= 1;
-			}
+			incrementXY(Direction);
 			return new MoveAction(Direction);
 		}else if(currentTask != null) {
 			if(this.getWasteLevel() <1000 && currentTask.getWasteRemaining()<= 1000-this.getWasteLevel()) {
@@ -199,30 +183,34 @@ public class JoelTanker extends Tanker{
 			}
 			if(!bHomeTime){
 				MovesToFuel+= 1;
-				if(Direction == 0) {
-					currentY += 1;
-				}else if(Direction == 1) {
-					currentY -= 1;
-				}else if(Direction == 2) {
-					currentX += 1;
-				}else if(Direction == 3) {
-					currentX -= 1;
-				}else if(Direction == 4) {
-					currentX += 1;
-					currentY += 1;
-				}else if(Direction == 5) {
-					currentX -= 1;
-					currentY += 1;
-				}else if(Direction == 6) {
-					currentX += 1;
-					currentY -= 1;
-				}else if(Direction == 7) {
-					currentX -= 1;
-					currentY -= 1;
-				}
+				incrementXY(Direction);
 				return new MoveAction(Direction);
 			}
 			else return null;
+		}
+	}
+	
+	public void incrementXY(int Direction) {
+		if(Direction == 0) {
+			currentY += 1;
+		}else if(Direction == 1) {
+			currentY -= 1;
+		}else if(Direction == 2) {
+			currentX += 1;
+		}else if(Direction == 3) {
+			currentX -= 1;
+		}else if(Direction == 4) {
+			currentX += 1;
+			currentY += 1;
+		}else if(Direction == 5) {
+			currentX -= 1;
+			currentY += 1;
+		}else if(Direction == 6) {
+			currentX += 1;
+			currentY -= 1;
+		}else if(Direction == 7) {
+			currentX -= 1;
+			currentY -= 1;
 		}
 	}
 	
@@ -599,7 +587,44 @@ public class JoelTanker extends Tanker{
 		}
 	}
 	
+	private void UpdateClusterWells() {
+		double smallestDist = 99999;
+		for(int i = 0;i<Clusters.size();i++) {
+			for(int j = 0;j<Locations.size();j++){
+				if(Locations.get(j).getWell()!= null) {
+					if(DistanceTo(Locations.get(j),Clusters.get(i).getCentreLocation()) <= smallestDist){
+						smallestDist = DistanceTo(Locations.get(j),Clusters.get(i).getCentreLocation());
+						Clusters.get(i).setWell(Locations.get(i));
+					}
+				}
+			}
+		}
+	}
 	
+	private void CompileClusters() {
+		
+		for(int i = 0;i<Locations.size();i++) {
+			boolean bAdded = false;
+			if(Locations.get(i).getStation()!= null) {
+				if(Clusters.size() == 0) {
+					Clusters.add(new Cluster());
+					Clusters.get(0).AddLocation(Locations.get(i));
+				}
+				for(int j = 0;j<Clusters.size();j++) {
+					if(DistanceTo(Locations.get(i),Clusters.get(j).getCentreLocation()) <=10){
+						Clusters.get(j).AddLocation(Locations.get(i));
+						bAdded = true;
+					}
+				}
+				if(bAdded == false) {
+				
+					Clusters.add(new Cluster());
+					Clusters.get(Clusters.size()-1).AddLocation(Locations.get(i));;
+					
+				}
+			}
+		}
+	}
 	
 
 }
