@@ -50,7 +50,7 @@ public class JoelTanker extends Tanker{
 	boolean bFuelTime = false;
 	boolean bDisposeTime = false;
 	boolean bHomeTime = false;
-	boolean bFindPumps = false;
+	boolean bFindPumps = true;
 	int Direction = MoveAction.NORTHEAST;
 	@Override
 	public Action senseAndAct(Cell[][] view, boolean actionFailed, long timestep) {
@@ -81,6 +81,7 @@ public class JoelTanker extends Tanker{
 			if(!bHomeTime) {
 				currentTask = getBestTask();
 			}else {
+				//return JoelMoveToward(startLoc);
 				currentTask = getBestTaskHOME();
 				}
 		}
@@ -116,7 +117,14 @@ public class JoelTanker extends Tanker{
 				bFuelTime = false;
 				return new RefuelAction();
 			}
-		}else if(bFindPumps) {
+		}
+		//else if(bHomeTime) {
+			/*
+			 * Action action =JoelMoveToward(startLoc); if(action!=null) { return action;
+			 * }else { stepNumber = 0; bHomeTime = false; }
+			 */
+		//}
+		if(bFindPumps) {
 			MovesToFuel+= 1;
 			if(Direction == 0) {
 				currentY += 1;
@@ -155,7 +163,11 @@ public class JoelTanker extends Tanker{
 				}
 			}else {
 				
-				targetWell = getNearestWellLocation(getStation(currentTask.getStationPosition()));
+				if(bHomeTime) {
+					targetWell = getNearestWellLocation(getStation(currentTask.getStationPosition()));
+				}else {
+					targetWell = getNearestWellLocation(getStation(currentTask.getStationPosition()));
+				}
 				bDisposeTime = true;
 				
 				/*
@@ -181,6 +193,7 @@ public class JoelTanker extends Tanker{
 					return action;
 					
 				}else {
+					//stepNumber = 0;
 					bHomeTime = false;
 				}
 			}
@@ -408,15 +421,19 @@ public class JoelTanker extends Tanker{
 	
 	//get the nearest well to the station
 		public Location getNearestWellLocationHOMETIME(Station station) {
-			int smallestDist = 9999;
-			int tempDist = 0;
-			int nextDist;
+			double smallestDist = 9999;
+			double tempDist = 0;
+			double nextDist = 0;
+			double statDist = 0;
 			Location BestLoc = null;
 			Location loc = getLocation(station.getPoint());
 			for(int i = 0;i<Locations.size();i++) {
 				if(Locations.get(i).getWell() != null) {
 					tempDist = DistanceTo(getLocation(Locations.get(i).getWell().getPoint()));
 					nextDist = DistanceTo(Locations.get(i),startLoc);
+					statDist = DistanceTo(Locations.get(i),getNearestStation(Locations.get(i)));
+
+					tempDist = tempDist + statDist*0.54 + nextDist*0.05;
 					if(tempDist<= smallestDist) {
 						smallestDist = tempDist;
 						BestLoc = Locations.get(i);

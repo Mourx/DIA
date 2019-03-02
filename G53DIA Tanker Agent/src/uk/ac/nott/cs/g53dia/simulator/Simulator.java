@@ -29,7 +29,7 @@ public class Simulator {
 	 * Time for which execution pauses so that GUI can update. Reducing this
 	 * value causes the simulation to run faster.
 	 */
-	private static int DELAY = 0;
+	private static int DELAY = 10;
 
 	/**
 	 * Number of timesteps to execute.
@@ -42,25 +42,25 @@ public class Simulator {
     private static boolean actionFailed = false;
 
 	public static void main(String[] args) {
-		double total = 0;
-		for(int i = 0;i<90;i++) {
+		//double total = 0;
+		//for(int i = 0;i<30;i++) {
 			// Note: to obtain reproducible behaviour, you can set the Random seed
-			Random r = new Random(i);
+			Random r = new Random(17);
 			// Create an environment
 			Environment env = new Environment(Tanker.MAX_FUEL/2, r);
 			// Create a tanker
 			//Tanker tank = new DemoTanker(r);
 			Tanker tank = new JoelTanker(r);
 			// Create a GUI window to show the tanker
-			//TankerViewer tv = new TankerViewer(tank);
-			//tv.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
+			TankerViewer tv = new TankerViewer(tank);
+			tv.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
 			// Start executing the Tanker
 			while (env.getTimestep() < DURATION) {
 				// Advance the environment timestep
 				env.tick();
 				//System.out.println(" at timestep " + env.getTimestep() + " , score: " + tank.getScore());
 				// Update the GUI
-				//tv.tick(env);
+				tv.tick(env);
 				// Get the current view of the tanker
 				Cell[][] view = env.getView(tank.getPosition(), Tanker.VIEW_RANGE);
 				// Let the tanker choose an action
@@ -81,9 +81,9 @@ public class Simulator {
 				}
 			}
 			System.out.println("Simulation completed at timestep " + env.getTimestep() + " , score: " + tank.getScore());
-			total+= tank.getScore();
-		}
-		total = total/90;
-		System.out.println("Average over 30: " + total);
+			//total+= tank.getScore();
+	//	}
+	//	total = total/30;
+	//	System.out.println("Average over 30: " + total);
 	}
 }
