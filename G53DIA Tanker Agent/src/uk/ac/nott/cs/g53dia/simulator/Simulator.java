@@ -43,7 +43,7 @@ public class Simulator {
 
 	public static void main(String[] args) {
 		double total = 0;
-		for(int i = 0;i<30;i++) {
+		for(int i = 0;i<60;i++) {
 			// Note: to obtain reproducible behaviour, you can set the Random seed
 			Random r = new Random(i);
 			// Create an environment
@@ -83,7 +83,7 @@ public class Simulator {
 			System.out.println("Simulation completed at timestep " + env.getTimestep() + " , score: " + tank.getScore());
 			total+= tank.getScore();
 		}
-		total = total/30;
+		total = total/60;
 		System.out.println("Average over 30: " + total);
 	}
 }
