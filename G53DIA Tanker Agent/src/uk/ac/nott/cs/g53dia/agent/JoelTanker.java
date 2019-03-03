@@ -47,34 +47,41 @@ public class JoelTanker extends Tanker{
 	Location FuelPumpLocation = null;
 	Location targetWell = null;
 	Location startLoc = null;
+	Location bestPumpLocation = null;
 	int stepNumber = 0;
 	boolean bFuelTime = false;
 	boolean bDisposeTime = false;
 	boolean bHomeTime = false;
 	boolean bFindPumps = true;
+	boolean bMoveToPump = false;
 	int Direction = MoveAction.NORTHEAST;
 	
 	@Override
 	public Action senseAndAct(Cell[][] view, boolean actionFailed, long timestep) {
-		// TODO Auto-generated method stub
-		{
-			stepNumber++;
-			currentPoint = (Point)this.getPosition();
-			if(startLoc == null) startLoc = new Location(null,currentPoint,0,0,0);
-			if(FuelPumpLocation == null) FuelPumpLocation = new Location((FuelPump)this.getCurrentCell(view),this.getPosition(),0,0);
-			FuelPumpLocation = getNearestPump();
-		}	
+		
+		
+		stepNumber++;
+		currentPoint = (Point)this.getPosition();
+		if(startLoc == null) startLoc = new Location(null,currentPoint,0,0,0);
+		if(FuelPumpLocation == null) FuelPumpLocation = new Location((FuelPump)this.getCurrentCell(view),this.getPosition(),0,0);
+		FuelPumpLocation = getNearestPump();
+			
+		ScanArea(view);
+		UpdateClusterWells();
 		if(stepNumber > 400) {
 			bFindPumps = false;
 		}
-		
-		ScanArea(view);
-		//CompileClusters();
-		//UpdateClusterWells();
-		if(stepNumber >= 3250) {
-			bHomeTime = !bHomeTime;
-			stepNumber = 0;
+		if(stepNumber % 7000 ==0) {
+			bestPumpLocation = getBestPump();
+			bMoveToPump = true;
 		}
+		
+		
+		if(stepNumber % 3250 ==0) {
+			bHomeTime = !bHomeTime;
+			
+		}
+		
 		//don't switch if close to task
 		if(currentTask != null && DistanceTo(getLocation(currentTask.getStationPosition())) >= 15) {
 			if(!bHomeTime) {
@@ -129,6 +136,19 @@ public class JoelTanker extends Tanker{
 			 * }else { stepNumber = 0; bHomeTime = false; }
 			 */
 		//}
+		if(bMoveToPump) {
+			
+			Action action = JoelMoveToward(bestPumpLocation);
+			if(action!=null) {
+				MovesToFuel-= 1;
+				return action;
+			}else {
+				bMoveToPump = false;
+				if(this.getFuelLevel()<200) {
+					return new RefuelAction();
+				}
+			}
+		}
 		if(bFindPumps) {
 			MovesToFuel+= 1;
 			incrementXY(Direction);
@@ -155,11 +175,14 @@ public class JoelTanker extends Tanker{
 				}
 				bDisposeTime = true;
 				
-				/*
-				 * if(!CheckIfInRange(targetWell)) { MoveAction action =
-				 * JoelMoveToward(FuelPumpLocation); MovesToFuel-= 1; bFuelTime = true; return
-				 * action; }
-				 */
+				//Make sure we can reach the well
+			 	if(!CheckIfInRange(targetWell)) { 
+				 	MoveAction action = JoelMoveToward(FuelPumpLocation); 
+				 	MovesToFuel-= 1;
+				 	bFuelTime = true; 
+				 	return action;
+			 	}
+				 
 				 
 				MoveAction action = JoelMoveToward(targetWell);
 				if(action != null) {
@@ -191,6 +214,31 @@ public class JoelTanker extends Tanker{
 		}
 	}
 	
+	public Location getBestPump() {
+		Location bestPump = null;
+		double pumpScore = 0;
+		double bestScore = 0;
+		for(int i = 0;i<Locations.size();i++) {
+			if(Locations.get(i).getPump()!= null && CheckIfInRange(Locations.get(i))) {
+				pumpScore = 0;
+				if(bestPump == null) {
+					bestPump = Locations.get(i);
+				}else {
+					for(int j = 0;j<Clusters.size();j++) {
+						if(DistanceTo(Clusters.get(j).getCentreLocation(),Locations.get(i)) <= 15){
+							pumpScore += Clusters.get(j).getSize() * DistanceTo(Clusters.get(j).getCentreLocation(),Clusters.get(j).nearestWell);
+						}
+					}
+					if(pumpScore >= bestScore) {
+						bestScore = pumpScore;
+						bestPump = Locations.get(i);
+					}
+				}
+			}
+		}
+		return bestPump;
+	}
+
 	public void incrementXY(int Direction) {
 		if(Direction == 0) {
 			currentY += 1;
@@ -410,7 +458,7 @@ public class JoelTanker extends Tanker{
 	}
 	
 	//get the nearest well to the station
-		public Location getNearestWellLocationHOMETIME(Station station) {
+	public Location getNearestWellLocationHOMETIME(Station station) {
 			double smallestDist = 9999;
 			double tempDist = 0;
 			double nextDist = 0;
@@ -550,6 +598,18 @@ public class JoelTanker extends Tanker{
 							Locations.set(id, new Location(station,station.getPoint(),j-20+currentX,20-i+currentY,id));
 						}else {
 							Locations.add(new Location(station,station.getPoint(),j-20+currentX,20-i+currentY,Locations.size()));
+							boolean bAdded = false;
+							for(int k = 0;k<Clusters.size();k++) {
+								if(DistanceTo(Locations.get(Locations.size()-1),Clusters.get(k).getCentreLocation()) <=10){
+									Clusters.get(k).AddLocation(Locations.get(Locations.size()-1));
+									bAdded = true;
+								}
+							}
+							if(bAdded == false) {
+							
+								Clusters.add(new Cluster());
+								Clusters.get(Clusters.size()-1).AddLocation(Locations.get(Locations.size()-1));;
+							}
 						}
 					//}
 				}else if(view[j][i] instanceof Well) {
@@ -590,8 +650,9 @@ public class JoelTanker extends Tanker{
 	}
 	
 	private void UpdateClusterWells() {
-		double smallestDist = 99999;
+		
 		for(int i = 0;i<Clusters.size();i++) {
+			double smallestDist = 99999;
 			for(int j = 0;j<Locations.size();j++){
 				if(Locations.get(j).getWell()!= null) {
 					if(DistanceTo(Locations.get(j),Clusters.get(i).getCentreLocation()) <= smallestDist){
@@ -608,10 +669,7 @@ public class JoelTanker extends Tanker{
 		for(int i = 0;i<Locations.size();i++) {
 			boolean bAdded = false;
 			if(Locations.get(i).getStation()!= null) {
-				if(Clusters.size() == 0) {
-					Clusters.add(new Cluster());
-					Clusters.get(0).AddLocation(Locations.get(i));
-				}
+			
 				for(int j = 0;j<Clusters.size();j++) {
 					if(DistanceTo(Locations.get(i),Clusters.get(j).getCentreLocation()) <=10){
 						Clusters.get(j).AddLocation(Locations.get(i));
@@ -622,7 +680,6 @@ public class JoelTanker extends Tanker{
 				
 					Clusters.add(new Cluster());
 					Clusters.get(Clusters.size()-1).AddLocation(Locations.get(i));;
-					
 				}
 			}
 		}

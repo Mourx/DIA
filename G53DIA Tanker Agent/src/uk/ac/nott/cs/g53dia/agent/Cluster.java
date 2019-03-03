@@ -22,6 +22,10 @@ public class Cluster {
 		nearestWell = well;
 	}
 	
+	public int getSize() {
+		return Stations.size();
+	}
+	
 	void calculateCentre() {
 		double tempx=0,tempy=0;
 		for(int i =0;i<Stations.size();i++) {
