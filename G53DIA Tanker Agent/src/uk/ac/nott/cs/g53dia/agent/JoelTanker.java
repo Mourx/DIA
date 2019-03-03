@@ -69,12 +69,13 @@ public class JoelTanker extends Tanker{
 		}
 		
 		ScanArea(view);
-		CompileClusters();
-		UpdateClusterWells();
+		//CompileClusters();
+		//UpdateClusterWells();
 		if(stepNumber >= 3250) {
 			bHomeTime = !bHomeTime;
 			stepNumber = 0;
 		}
+		//don't switch if close to task
 		if(currentTask != null && DistanceTo(getLocation(currentTask.getStationPosition())) >= 15) {
 			if(!bHomeTime) {
 				currentTask = getBestTask();
@@ -87,7 +88,7 @@ public class JoelTanker extends Tanker{
 			}else {
 				//return JoelMoveToward(startLoc);
 				currentTask = getBestTaskHOME();
-				}
+			}
 		}
 		MovesToFuel = DistanceTo(FuelPumpLocation);
 
@@ -242,6 +243,7 @@ public class JoelTanker extends Tanker{
 			return diffY;
 		}
 	}
+	
 	public Location getNearestPump(Location here) {
 		int smallestDist = DistanceTo(here);
 		int tempDist = 0;
@@ -317,7 +319,7 @@ public class JoelTanker extends Tanker{
 		for(int i = 0;i<AvailableTasks.size();i++) {
 			candTask = AvailableTasks.get(i);
 			if(CheckIfInRange(Locations.get(getStationID(candTask.getStationPosition()))) && 
-						candTask.getWasteRemaining() >0) {
+														candTask.getWasteRemaining() >0) {
 				if (bestTask == null) {
 					bestTask = candTask;
 				}else {
