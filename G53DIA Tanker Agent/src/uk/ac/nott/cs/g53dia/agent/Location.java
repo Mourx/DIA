@@ -12,6 +12,7 @@ public class Location {
 	Station station = null;
 	Well well = null;
 	FuelPump pump = null;
+	boolean bExplored = false;
 	int x,y;
 	Point point;
 	protected int id;
@@ -72,5 +73,13 @@ public class Location {
 	
 	public Point getPoint() {
 		return point;
+	}
+	
+	public boolean getExplored() {
+		return bExplored;
+	}
+	
+	public void setExplored(boolean check) {
+		bExplored = check;
 	}
 }
