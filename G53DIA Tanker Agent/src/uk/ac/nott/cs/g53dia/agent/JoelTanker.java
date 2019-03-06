@@ -55,7 +55,12 @@ public class JoelTanker extends Tanker{
 	boolean bHomeTime = false;
 	boolean bFindPumps = true;
 	boolean bMoveToPump = false;
-	double WEIGHT_WASTE = 8000;
+	double WEIGHT_WASTE = 6000;
+	double WEIGHT_HOME = 0.17;
+	double WEIGHT_PUMP = 0.2;
+	double WEIGHT_STATION = 0.1;
+	int MIN_WASTE = 150;
+	int MAX_WASTE = 800;
 	int Direction = MoveAction.NORTHEAST;
 	
 	
@@ -186,7 +191,7 @@ public class JoelTanker extends Tanker{
 			incrementXY(Direction);
 			return new MoveAction(Direction);
 		}else if(currentTask != null) {
-			if(this.getWasteLevel() <1000 && currentTask.getWasteRemaining()<= 1000-this.getWasteLevel()) {
+			if(this.getWasteLevel() <=MAX_WASTE && currentTask.getWasteRemaining()<= 1000-this.getWasteLevel()) {
 				
 				MoveAction action = CustomMoveToward(getLocation(currentTask.getStationPosition()));
 				if(action!=null){
@@ -407,8 +412,6 @@ public class JoelTanker extends Tanker{
 		double smallestDist = 9999;
 		double tempDist = 0;
 		double nextDist = 0;
-		double bestEfficiency = 8888;
-		double efficiency = 0;
 		double pumpDist = 0;
 		double wasteEff = 0;
 		Task candTask;
@@ -422,16 +425,16 @@ public class JoelTanker extends Tanker{
 				if (bestTask == null) {
 					bestTask = candTask;
 				}else {
-					if(candTask.getWasteRemaining() > 200) {
+					if(candTask.getWasteRemaining() >= MIN_WASTE) {
 						
 						Station candStation = getStation(candTask.getStationPosition());
 						Location candStationLocation = getLocation(candStation.getPoint());
 						Location candWellLocation = getNearestWellLocation(candStation);
 						tempDist = DistanceTo(candStationLocation);
-						nextDist = DistanceTo(candStationLocation,getNearestStation(candStationLocation));
-						pumpDist = DistanceTo(candStationLocation,getNearestPump(candStationLocation));
+						nextDist = DistanceTo(candStationLocation,getNearestStation(candStationLocation))*WEIGHT_STATION;
+						pumpDist = DistanceTo(candStationLocation,getNearestPump(candStationLocation))*WEIGHT_PUMP;
 						wasteEff = 1.0/candTask.getWasteRemaining() * WEIGHT_WASTE;
-						tempDist = tempDist + nextDist*0.1 + pumpDist*0.2 + wasteEff;
+						tempDist = tempDist + nextDist + pumpDist + wasteEff;
 						if(tempDist<= smallestDist) { 
 							smallestDist = tempDist; 
 							bestTask = candTask;
@@ -441,34 +444,6 @@ public class JoelTanker extends Tanker{
 				}
 					
 			}
-		}if(bestTask !=null  && bestTask.getWasteRemaining() <=200) {
-			for(int i = 0;i<AvailableTasks.size();i++) {
-				candTask = AvailableTasks.get(i);
-				if(CheckIfInRange(Locations.get(getStationID(candTask.getStationPosition()))) && 
-															candTask.getWasteRemaining() >0) {
-					if (bestTask == null) {
-						bestTask = candTask;
-					}else {
-						if(candTask.getWasteRemaining() > 200) {
-							
-							Station candStation = getStation(candTask.getStationPosition());
-							Location candStationLocation = getLocation(candStation.getPoint());
-							Location candWellLocation = getNearestWellLocation(candStation);
-							tempDist = DistanceTo(candStationLocation);
-							nextDist = DistanceTo(candStationLocation,getNearestStation(candStationLocation));
-							pumpDist = DistanceTo(candStationLocation,getNearestPump(candStationLocation));
-							wasteEff = 1.0/candTask.getWasteRemaining() * WEIGHT_WASTE;
-							tempDist = tempDist + nextDist*0.1 + pumpDist*0.2 + wasteEff;
-							if(tempDist<= smallestDist) { 
-								smallestDist = tempDist; 
-								bestTask = candTask;
-							}
-								
-						}
-					}
-						
-				}
-			}
 		}
 		return bestTask;
 	}
@@ -477,8 +452,6 @@ public class JoelTanker extends Tanker{
 		double smallestDist = 9999;
 		double tempDist = 0;
 		double nextDist = 0;
-		double bestEfficiency = 8888;
-		double efficiency = 0;
 		double pumpDist = 0;
 		double wasteEff = 0;
 		Task candTask;
@@ -492,50 +465,22 @@ public class JoelTanker extends Tanker{
 				if (bestTask == null) {
 					bestTask = candTask;
 				}else {
-					if(candTask.getWasteRemaining() > 200) {
+					if(candTask.getWasteRemaining() > MIN_WASTE) {
 						
 						Station candStation = getStation(candTask.getStationPosition());
 						Location candStationLocation = getLocation(candStation.getPoint());
 						Location candWellLocation = getNearestWellLocation(candStation);
 						tempDist = DistanceTo(candStationLocation);
-						nextDist = DistanceTo(candStationLocation,startLoc);
-						pumpDist = DistanceTo(candStationLocation,getNearestPump(candStationLocation));
+						nextDist = DistanceTo(candStationLocation,startLoc) * WEIGHT_HOME;
+						pumpDist = DistanceTo(candStationLocation,getNearestPump(candStationLocation))*WEIGHT_PUMP;
 						wasteEff = 1.0/candTask.getWasteRemaining() * WEIGHT_WASTE;
-						tempDist = tempDist + nextDist*0.17 + pumpDist*0.2 + wasteEff;
+						tempDist = tempDist + nextDist + pumpDist + wasteEff;
 						if(tempDist<= smallestDist) { 
 							smallestDist = tempDist; 
 							bestTask = candTask;
 						}
 					}
 				}	
-			}
-		}if(bestTask !=null  && bestTask.getWasteRemaining() <=200) {
-			for(int i = 0;i<AvailableTasks.size();i++) {
-				candTask = AvailableTasks.get(i);
-				if(CheckIfInRange(Locations.get(getStationID(candTask.getStationPosition()))) && 
-															candTask.getWasteRemaining() >0) {
-					if (bestTask == null) {
-						bestTask = candTask;
-					}else {
-						if(candTask.getWasteRemaining() > 200) {
-							
-							Station candStation = getStation(candTask.getStationPosition());
-							Location candStationLocation = getLocation(candStation.getPoint());
-							Location candWellLocation = getNearestWellLocation(candStation);
-							tempDist = DistanceTo(candStationLocation);
-							nextDist = DistanceTo(candStationLocation,getNearestStation(candStationLocation));
-							pumpDist = DistanceTo(candStationLocation,getNearestPump(candStationLocation));
-							wasteEff = 1.0/candTask.getWasteRemaining() * WEIGHT_WASTE;
-							tempDist = tempDist + nextDist*0.1 + pumpDist*0.2 +wasteEff;
-							if(tempDist<= smallestDist) { 
-								smallestDist = tempDist; 
-								bestTask = candTask;
-							}
-								
-						}
-					}
-						
-				}
 			}
 		}
 		return bestTask;
