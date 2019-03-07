@@ -57,10 +57,13 @@ public class JoelTanker extends Tanker{
 	boolean bMoveToPump = false;
 	double WEIGHT_WASTE = 6000;
 	double WEIGHT_HOME = 0.17;
-	double WEIGHT_PUMP = 0.2;
+	double WEIGHT_PUMP = 0.8;
 	double WEIGHT_STATION = 0.1;
+	double WEIGHT_WELL_PUMP = 0.2;
+	double WEIGHT_WELL_STATION = 0.54;
 	int MIN_WASTE = 150;
 	int MAX_WASTE = 800;
+	
 	int Direction = MoveAction.NORTHEAST;
 	
 	
@@ -497,9 +500,9 @@ public class JoelTanker extends Tanker{
 		for(int i = 0;i<Locations.size();i++) {
 			if(Locations.get(i).getWell() != null) {
 				tempDist = DistanceTo(getLocation(Locations.get(i).getWell().getPoint()));
-				nextDist = DistanceTo(Locations.get(i),FuelPumpLocation);
-				statDist = DistanceTo(Locations.get(i),getNearestStation(Locations.get(i)));
-				tempDist = tempDist + statDist*0.54+ nextDist*0;
+				nextDist = DistanceTo(Locations.get(i),FuelPumpLocation)*WEIGHT_WELL_PUMP;
+				statDist = DistanceTo(Locations.get(i),getNearestStation(Locations.get(i)))*WEIGHT_WELL_STATION;
+				tempDist = tempDist + statDist+ nextDist;
 				if(tempDist<= smallestDist) {
 					smallestDist = tempDist;
 					BestLoc = Locations.get(i);
@@ -524,9 +527,8 @@ public class JoelTanker extends Tanker{
 				if(Locations.get(i).getWell() != null) {
 					tempDist = DistanceTo(getLocation(Locations.get(i).getWell().getPoint()));
 					nextDist = DistanceTo(Locations.get(i),startLoc);
-					statDist = DistanceTo(Locations.get(i),getNearestStation(Locations.get(i)));
-
-					tempDist = tempDist + statDist*0.54 + nextDist*0.05;
+					statDist = DistanceTo(Locations.get(i),getNearestStation(Locations.get(i)))*WEIGHT_WELL_STATION;
+					tempDist = tempDist + statDist + nextDist*0.5;
 					if(tempDist<= smallestDist) {
 						smallestDist = tempDist;
 						BestLoc = Locations.get(i);
