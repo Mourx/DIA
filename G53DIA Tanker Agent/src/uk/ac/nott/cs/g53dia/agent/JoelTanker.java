@@ -57,8 +57,8 @@ public class JoelTanker extends Tanker{
 	boolean bMoveToPump = false;
 	double WEIGHT_WASTE = 6000;
 	double WEIGHT_HOME = 0.17;
-	double WEIGHT_PUMP = 0.8;
-	double WEIGHT_STATION = 0.1;
+	double WEIGHT_PUMP = 0.1;
+	double WEIGHT_STATION = 0.2;
 	double WEIGHT_WELL_PUMP = 0.2;
 	double WEIGHT_WELL_STATION = 0.54;
 	int MIN_WASTE = 150;
@@ -104,11 +104,9 @@ public class JoelTanker extends Tanker{
 		
 		
 		if(stepNumber % 4000 ==0) {
-			//if(CheckIfInRange(startLoc)) {
 			
-				bHomeTime = !bHomeTime;
-				System.out.print("HomeTime");
-			//}
+			bHomeTime = !bHomeTime;
+
 			
 		}
 		
@@ -221,6 +219,7 @@ public class JoelTanker extends Tanker{
 				
 				//Make sure we can reach the well
 			 	if(!CheckIfInRange(targetWell)) { 
+			 		FuelPumpLocation = getNearestPump(targetWell);
 				 	MoveAction action = CustomMoveToward(FuelPumpLocation);
 				 	if(action!=null) {
 					 	MovesToFuel-= 1;
@@ -279,9 +278,14 @@ public class JoelTanker extends Tanker{
 					bestPump = Locations.get(i);
 				}else {
 					for(int j = 0;j<Clusters.size();j++) {
-						if(DistanceTo(Clusters.get(j).getCentreLocation(),Locations.get(i)) <= 15){
-							pumpScore += Clusters.get(j).getSize() * DistanceTo(Clusters.get(j).getCentreLocation(),Clusters.get(j).nearestWell);
+						if(DistanceTo(Clusters.get(j).getCentreLocation(),Locations.get(i)) <= 15 && Clusters.get(j).Stations.size() > 0){
+							if(DistanceTo(Clusters.get(j).getCentreLocation(),Clusters.get(j).nearestWell) != 0) {
+								pumpScore += Clusters.get(j).getSize() * 1/DistanceTo(Clusters.get(j).getCentreLocation(),Clusters.get(j).nearestWell);
+							}else {
+								pumpScore += Clusters.get(j).getSize() * 1;
+							}
 						}
+						
 					}
 					if(pumpScore >= bestScore) {
 						bestScore = pumpScore;
@@ -721,26 +725,19 @@ public class JoelTanker extends Tanker{
 		}
 	}
 	
-	private void CompileClusters() {
-		
-		for(int i = 0;i<Locations.size();i++) {
-			boolean bAdded = false;
-			if(Locations.get(i).getStation()!= null) {
-			
-				for(int j = 0;j<Clusters.size();j++) {
-					if(DistanceTo(Locations.get(i),Clusters.get(j).getCentreLocation()) <=10){
-						Clusters.get(j).AddLocation(Locations.get(i));
-						bAdded = true;
-					}
-				}
-				if(bAdded == false) {
-				
-					Clusters.add(new Cluster());
-					Clusters.get(Clusters.size()-1).AddLocation(Locations.get(i));;
-				}
-			}
-		}
-	}
-	
+	/*
+	 * private void CompileClusters() {
+	 * 
+	 * for(int i = 0;i<Locations.size();i++) { boolean bAdded = false;
+	 * if(Locations.get(i).getStation()!= null) {
+	 * 
+	 * for(int j = 0;j<Clusters.size();j++) {
+	 * if(DistanceTo(Locations.get(i),Clusters.get(j).getCentreLocation()) <=10){
+	 * Clusters.get(j).AddLocation(Locations.get(i)); bAdded = true; } } if(bAdded
+	 * == false) {
+	 * 
+	 * Clusters.add(new Cluster());
+	 * Clusters.get(Clusters.size()-1).AddLocation(Locations.get(i));; } } } }
+	 */
 
 }
