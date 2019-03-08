@@ -61,6 +61,7 @@ public class JoelTanker extends Tanker{
 	double WEIGHT_STATION = 0.2;
 	double WEIGHT_WELL_PUMP = 0.2;
 	double WEIGHT_WELL_STATION = 0.54;
+	int EXPLORE_LIMIT = 400;
 	int MIN_WASTE = 150;
 	int MAX_WASTE = 800;
 	
@@ -93,7 +94,7 @@ public class JoelTanker extends Tanker{
 			
 		ScanArea(view);
 		UpdateClusterWells();
-		if(exploreSteps > 400) {
+		if(exploreSteps > EXPLORE_LIMIT) {
 			bFindPumps = false;
 		}
 		if(stepNumber % 7000 ==0) {
