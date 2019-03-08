@@ -43,9 +43,9 @@ public class Simulator {
 
 	public static void main(String[] args) {
 		double total = 0;
-		for(int i = 0;i<90;i++) {
+		for(int i = 0;i<400;i++) {
 			// Note: to obtain reproducible behaviour, you can set the Random seed
-			Random r = new Random(i);
+			Random r = new Random();
 			// Create an environment
 			Environment env = new Environment(Tanker.MAX_FUEL/2, r);
 			// Create a tanker
@@ -83,7 +83,7 @@ public class Simulator {
 			System.out.println("Seed: "+i+" Simulation completed at timestep " + env.getTimestep() + " , score: " + tank.getScore());
 			total+= tank.getScore();
 		}
-		total = total/90;
+		total = total/400;
 		System.out.println("Average over 30: " + total);
 	}
 }
