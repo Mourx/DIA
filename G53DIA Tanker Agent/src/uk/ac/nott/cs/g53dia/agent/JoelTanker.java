@@ -61,7 +61,7 @@ public class JoelTanker extends Tanker{
 	double WEIGHT_HOME = 0.17;
 	double WEIGHT_PUMP = 0.1;
 	double WEIGHT_STATION = 0.2;
-	double WEIGHT_BEST_PUMP = 0.5;
+	double WEIGHT_BEST_PUMP = 0.0;
 	double WEIGHT_WELL_PUMP = 0.2;
 	double WEIGHT_WELL_STATION = 0.54;
 	double WEIGHT_DISTANCE = 1.25;
