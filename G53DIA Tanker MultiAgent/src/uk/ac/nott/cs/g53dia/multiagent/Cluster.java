@@ -37,6 +37,6 @@ public class Cluster {
 	}
 	
 	public Location getCentreLocation() {
-		return new Location(null,null,(int)ClusterCentreX,(int)ClusterCentreY,0);
+		return new Location(null,null,(int)ClusterCentreX,(int)ClusterCentreY,false,0);
 	}
 }

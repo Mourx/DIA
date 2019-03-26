@@ -30,7 +30,7 @@ public class MultiSimulator {
 	 * Time for which execution pauses so that GUI can update. Reducing this
 	 * value causes the simulation to run faster.
 	 */
-	private static int DELAY = 20;
+	private static int DELAY = 0;
 
 	/**
 	 * Number of timesteps to execute.
@@ -43,21 +43,24 @@ public class MultiSimulator {
     private static boolean actionFailed = false;
 
     public static void main(String[] args) {
+    	int total =0;
+    	for(int i = 0;i<10;i++) {
+
     	// Note: to obtain reproducible behaviour, you can set the Random seed
-    	Random r = new Random();
+    	Random r = new Random(i);
     	// Create an environment
     	Environment env = new Environment(Tanker.MAX_FUEL/2, r);
     	// Create a fleet
-    	Fleet fleet = new DemoFleet(r);
+    	Fleet fleet = new JoelFleet(r);
     	// Create a GUI window to show the fleet
-    	FleetViewer fv = new FleetViewer(fleet);
-    	fv.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
+    	//FleetViewer fv = new FleetViewer(fleet);
+    	//fv.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
     	// Start executing the tankers in the Fleet
     	while (env.getTimestep() < DURATION) {
     		// Advance the environment timestep
     		env.tick();
     		// Update the GUI
-    		fv.tick(env);
+    		//fv.tick(env);
     		for (Tanker t:fleet) {
     			// Get the current view of the tanker
     			Cell[][] view = env.getView(t.getPosition(), Tanker.VIEW_RANGE);
@@ -78,7 +81,11 @@ public class MultiSimulator {
     			} catch (Exception e) { }
     		}
     	}
-    	System.out.println("Simulation completed at timestep " + env.getTimestep() + " , score: " + fleet.getScore());
+    	System.out.println("Seed: "+i+" Simulation completed at timestep " + env.getTimestep() + " , score: " + fleet.getScore());
+		total+= fleet.getScore();
+	}
+	total = total/400;
+	System.out.println("Average over 30: " + total);
     }
 }
 

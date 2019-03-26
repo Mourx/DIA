@@ -31,7 +31,7 @@ public class MultiEvaluator {
 			// Create an environment
 			Environment env = new Environment(Tanker.MAX_FUEL/2, r);
 			// Create a fleet
-			Fleet fleet = new DemoFleet(r);
+			Fleet fleet = new JoelFleet(r);
 			// Start executing the tankers in the Fleet
 			run:
 				while (env.getTimestep() < DURATION) {

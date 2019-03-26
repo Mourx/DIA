@@ -3,14 +3,14 @@ import uk.ac.nott.cs.g53dia.multilibrary.*;
 
 import java.util.*;
 
-public class DemoFleet extends Fleet {
+public class JoelFleet extends Fleet {
 
     /** 
      * Number of tankers in the fleet (this is just an example, not a requirement).
      */
     private static int FLEET_SIZE = 3;
     
-    public DemoFleet() {
+    public JoelFleet() {
     	this(new Random());
     }
 
@@ -21,10 +21,18 @@ public class DemoFleet extends Fleet {
 	 * @param r
 	 *            The random number generator.
 	 */
-    public DemoFleet(Random r) {
+    public JoelFleet(Random r) {
 	// Create the tankers
 	for (int i=0; i<FLEET_SIZE; i++) {
-	    this.add(new JoelTanker(r));
-	}
+	    this.add(new EfficientTanker(r,this));
+		}
     }
+    public ArrayList<Task> AvailableTasks = new ArrayList<Task>();
+	public ArrayList<Location> Locations = new ArrayList<Location>();
+	public void ClaimTask(int ID) {
+		Locations.get(ID).setTaken(true);
+	}
+	public void DropTask(int ID) {
+		Locations.get(ID).setTaken(false);
+	}
 }

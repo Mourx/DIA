@@ -16,7 +16,8 @@ public class Location {
 	int x,y;
 	Point point;
 	protected int id;
-	public Location(Station s, Point p,int j, int i,int value) {
+	boolean bTaskTaken = false;
+	public Location(Station s, Point p,int j, int i,boolean taken,int value) {
 		
 		station = s;
 		
@@ -25,6 +26,7 @@ public class Location {
 		y = i;
 		point = p;
 		id = value;
+		bTaskTaken = taken;
 	}
 	
 	public Location(FuelPump s, Point p,int j, int i) {
@@ -81,5 +83,8 @@ public class Location {
 	
 	public void setExplored(boolean check) {
 		bExplored = check;
+	}
+	public void setTaken(boolean taken) {
+		bTaskTaken = taken;
 	}
 }

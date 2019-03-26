@@ -17,10 +17,10 @@ import uk.ac.nott.cs.g53dia.multilibrary.Task;
 import uk.ac.nott.cs.g53dia.multilibrary.Well;
 
 public class JoelTanker extends Tanker{
-
+	JoelFleet Fleet;
 	
 	public JoelTanker() {
-		this(new Random());
+		this(new Random(), null);
 	}
 
 	/**
@@ -30,15 +30,15 @@ public class JoelTanker extends Tanker{
 	 * @param r
 	 *            The random number generator.
 	 */
-	public JoelTanker(Random r) {
+	public JoelTanker(Random r, JoelFleet fleet) {
 		this.r = r;
+		Fleet = fleet;
 	}
 	
 	private Point currentPoint;
 	int pumpsFound = 0;
 	Task currentTask = null;
-	ArrayList<Task> AvailableTasks = new ArrayList<Task>();
-	ArrayList<Location> Locations = new ArrayList<Location>();
+	
 	ArrayList<Cluster> Clusters = new ArrayList<Cluster>();
 	int currentX,currentY = 0;
 	int MovesLeft = 0;
@@ -68,8 +68,8 @@ public class JoelTanker extends Tanker{
 	int EXPLORE_LIMIT = 390;
 	int MIN_WASTE = 150;
 	int MAX_WASTE = 845;
-	int BEST_PUMP_INTERVAL = 2500;
-	int HOME_MODE_INTERVAL = 4000;
+	int BEST_PUMP_INTERVAL = 10000;
+	int HOME_MODE_INTERVAL = 10000;
 	int Direction = MoveAction.NORTHEAST;
 	
 	
@@ -148,7 +148,7 @@ public class JoelTanker extends Tanker{
 	//refreshes important variables
 	public void Initialise(Cell[][] view) {
 		currentPoint = (Point)this.getPosition();
-		if(startLoc == null) startLoc = new Location(null,currentPoint,0,0,0);
+		if(startLoc == null) startLoc = new Location(null,currentPoint,0,0,false,0);
 		if(FuelPumpLocation == null) FuelPumpLocation = new Location((FuelPump)this.getCurrentCell(view),this.getPosition(),0,0);
 		if(currentTask == null) {
 			FuelPumpLocation = getNearestPump();
@@ -189,6 +189,7 @@ public class JoelTanker extends Tanker{
 	//Updates the current Task if necessary
 	public void UpdateTask() {
 		if(currentTask != null && DistanceTo(getLocation(currentTask.getStationPosition())) >= 15) {
+			Fleet.DropTask(getStationID(currentTask.getStationPosition()));
 			if(!bHomeTime) {
 				currentTask = getBestTask();
 			}else {
@@ -202,6 +203,9 @@ public class JoelTanker extends Tanker{
 				currentTask = getBestTaskHOME();
 			}
 		}
+		if(currentTask != null) {
+			Fleet.ClaimTask(getStationID(currentTask.getStationPosition()));
+		}
 	}
 	
 	//checks fuel conditions
@@ -214,6 +218,7 @@ public class JoelTanker extends Tanker{
 		if(this.getFuelLevel() <= DistanceTo(FuelPumpLocation)*2 +4) {
 			if(!bDisposeTime && currentTask!=null && DistanceTo(getLocation(currentTask.getStationPosition())) == 0) {
 				Task temp = currentTask;
+				Fleet.DropTask(getStationID(currentTask.getStationPosition()));
 				currentTask = null;
 				return new LoadWasteAction(temp);
 				
@@ -238,10 +243,11 @@ public class JoelTanker extends Tanker{
 	//verifies tasks are in range
 	public void VerifyTask() {
 		if(!bFindPumps && currentTask!=null) {
-			if(!bDisposeTime && !CheckIfInRange(Locations.get(getStationID(currentTask.getStationPosition())))) {
+			if(!bDisposeTime && !CheckIfInRange(Fleet.Locations.get(getStationID(currentTask.getStationPosition())))) {
 				if(this.getFuelLevel() < 200) {
 					bFuelTime = true;
 				}else{
+					Fleet.DropTask(getStationID(currentTask.getStationPosition()));
 					currentTask =null;
 				};
 			}
@@ -286,6 +292,7 @@ public class JoelTanker extends Tanker{
 		}else {
 			//set currentTask to null so we can find next task and deliver to well near it
 			Task temp = currentTask;
+			Fleet.DropTask(getStationID(currentTask.getStationPosition()));
 			currentTask = null;
 			return new LoadWasteAction(temp);
 		}
@@ -360,14 +367,14 @@ public class JoelTanker extends Tanker{
 		Location bestPump = bestPumpLocation;
 		double pumpScore = 0;
 		double bestScore = 0;
-		for(int i = 0;i<Locations.size();i++) {
-			if(Locations.get(i).getPump()!= null && CheckIfInRange(Locations.get(i))) {
+		for(int i = 0;i<Fleet.Locations.size();i++) {
+			if(Fleet.Locations.get(i).getPump()!= null && CheckIfInRange(Fleet.Locations.get(i))) {
 				pumpScore = 0;
 				if(bestPump == null) {
-					bestPump = Locations.get(i);
+					bestPump = Fleet.Locations.get(i);
 				}else {	
 					for(int j = 0;j<Clusters.size();j++) {
-						if(DistanceTo(Clusters.get(j).getCentreLocation(),Locations.get(i)) <= 15 && Clusters.get(j).Stations.size() > 0){
+						if(DistanceTo(Clusters.get(j).getCentreLocation(),Fleet.Locations.get(i)) <= 15 && Clusters.get(j).Stations.size() > 0){
 							if(Clusters.get(j).nearestWell != null && DistanceTo(Clusters.get(j).getCentreLocation(),Clusters.get(j).nearestWell) != 0) {
 								pumpScore += Clusters.get(j).getSize() * 1/DistanceTo(Clusters.get(j).getCentreLocation(),Clusters.get(j).nearestWell);
 							}else {
@@ -378,7 +385,7 @@ public class JoelTanker extends Tanker{
 					}
 					if(pumpScore >= bestScore) {
 						bestScore = pumpScore;
-						bestPump = Locations.get(i);
+						bestPump = Fleet.Locations.get(i);
 					}
 				}
 			}
@@ -443,16 +450,16 @@ public class JoelTanker extends Tanker{
 		int smallestDist = DistanceTo(here);
 		int tempDist = 0;
 		Location BestLoc = FuelPumpLocation;
-		for(int i = 0;i<Locations.size();i++) {
-			if(Locations.get(i).getPump() != null) {
+		for(int i = 0;i<Fleet.Locations.size();i++) {
+			if(Fleet.Locations.get(i).getPump() != null) {
 				if(currentTask != null) {
-					tempDist = DistanceTo(getLocation(currentTask.getStationPosition()),Locations.get(i));
+					tempDist = DistanceTo(getLocation(currentTask.getStationPosition()),Fleet.Locations.get(i));
 				}else {
-					tempDist = DistanceTo(here,Locations.get(i));
+					tempDist = DistanceTo(here,Fleet.Locations.get(i));
 				}
 				if(tempDist<= smallestDist) {
 					smallestDist = tempDist;
-					BestLoc = Locations.get(i);
+					BestLoc = Fleet.Locations.get(i);
 				}else if (tempDist == smallestDist){
 					//check closest to current refuel if equal
 				}	
@@ -466,13 +473,13 @@ public class JoelTanker extends Tanker{
 		int smallestDist = MovesToFuel;
 		int tempDist = 0;
 		Location BestLoc = FuelPumpLocation;
-		for(int i = 0;i<Locations.size();i++) {
-			if(Locations.get(i).getPump() != null) {
-				tempDist = DistanceTo(Locations.get(i));
+		for(int i = 0;i<Fleet.Locations.size();i++) {
+			if(Fleet.Locations.get(i).getPump() != null) {
+				tempDist = DistanceTo(Fleet.Locations.get(i));
 				if(tempDist<= smallestDist) {
 					smallestDist = tempDist;
 
-					BestLoc = Locations.get(i);
+					BestLoc = Fleet.Locations.get(i);
 				}else if (tempDist == smallestDist){
 					//check closest to current refuel if equal
 				}
@@ -487,14 +494,14 @@ public class JoelTanker extends Tanker{
 		int smallestDist = 99999;
 		int tempDist = 0;
 		Location BestLoc = here;
-		for(int i = 0;i<Locations.size();i++) {
-			if(Locations.get(i).getStation() != null && Locations.get(i).getStation().getTask() != null && Locations.get(i).getStation().getTask().getWasteRemaining() > 0) {
+		for(int i = 0;i<Fleet.Locations.size();i++) {
+			if(Fleet.Locations.get(i).getStation() != null && Fleet.Locations.get(i).getStation().getTask() != null && Fleet.Locations.get(i).getStation().getTask().getWasteRemaining() > 0) {
 				
-				tempDist = DistanceTo(here,Locations.get(i));
+				tempDist = DistanceTo(here,Fleet.Locations.get(i));
 				if(tempDist != 0) {
 					if(tempDist< smallestDist) {
 						smallestDist = tempDist;
-						BestLoc = Locations.get(i);
+						BestLoc = Fleet.Locations.get(i);
 					}else if (tempDist == smallestDist){
 						//check closest to current refuel if equal
 					}
@@ -516,10 +523,11 @@ public class JoelTanker extends Tanker{
 		Task candTask;
 		Task bestTask = currentTask;
 		if(currentTask !=null && CheckIfInRange(getLocation(currentTask.getStationPosition()))) bestTask = currentTask;
-		if(AvailableTasks != null)
-		for(int i = 0;i<AvailableTasks.size();i++) {
-			candTask = AvailableTasks.get(i);
-			if(CheckIfInRange(Locations.get(getStationID(candTask.getStationPosition()))) && 
+		if(Fleet.AvailableTasks != null)
+		for(int i = 0;i<Fleet.AvailableTasks.size();i++) {
+			candTask = Fleet.AvailableTasks.get(i);
+			if(CheckIfInRange(Fleet.Locations.get(getStationID(candTask.getStationPosition()))) &&
+														getLocation(candTask.getStationPosition()).bTaskTaken == false &&
 														candTask.getWasteRemaining() >0) {
 				if (bestTask == null) {
 					bestTask = candTask;
@@ -563,10 +571,10 @@ public class JoelTanker extends Tanker{
 		Task candTask;
 		Task bestTask = currentTask;
 		if(currentTask !=null && CheckIfInRange(getLocation(currentTask.getStationPosition()))) bestTask = currentTask;
-		if(AvailableTasks != null)
-		for(int i = 0;i<AvailableTasks.size();i++) {
-			candTask = AvailableTasks.get(i);
-			if(CheckIfInRange(Locations.get(getStationID(candTask.getStationPosition()))) && 
+		if(Fleet.AvailableTasks != null)
+		for(int i = 0;i<Fleet.AvailableTasks.size();i++) {
+			candTask = Fleet.AvailableTasks.get(i);
+			if(CheckIfInRange(Fleet.Locations.get(getStationID(candTask.getStationPosition()))) && 
 						candTask.getWasteRemaining() >0) {
 				if (bestTask == null) {
 					bestTask = candTask;
@@ -605,15 +613,15 @@ public class JoelTanker extends Tanker{
 		double nextDist = 0;
 		Location BestLoc = null;
 		Location loc = getLocation(station.getPoint());
-		for(int i = 0;i<Locations.size();i++) {
-			if(Locations.get(i).getWell() != null) {
-				tempDist = DistanceTo(getLocation(Locations.get(i).getWell().getPoint()));
-				nextDist = DistanceTo(Locations.get(i),FuelPumpLocation)*WEIGHT_WELL_PUMP;
-				statDist = DistanceTo(Locations.get(i),getNearestStation(Locations.get(i)))*WEIGHT_WELL_STATION;
+		for(int i = 0;i<Fleet.Locations.size();i++) {
+			if(Fleet.Locations.get(i).getWell() != null) {
+				tempDist = DistanceTo(getLocation(Fleet.Locations.get(i).getWell().getPoint()));
+				nextDist = DistanceTo(Fleet.Locations.get(i),FuelPumpLocation)*WEIGHT_WELL_PUMP;
+				statDist = DistanceTo(Fleet.Locations.get(i),getNearestStation(Fleet.Locations.get(i)))*WEIGHT_WELL_STATION;
 				tempDist = tempDist + statDist+ nextDist;
 				if(tempDist<= smallestDist) {
 					smallestDist = tempDist;
-					BestLoc = Locations.get(i);
+					BestLoc = Fleet.Locations.get(i);
 				}else if (tempDist == smallestDist){
 					//check closest to current refuel if equal
 				}
@@ -631,15 +639,15 @@ public class JoelTanker extends Tanker{
 			double statDist = 0;
 			Location BestLoc = null;
 			Location loc = getLocation(station.getPoint());
-			for(int i = 0;i<Locations.size();i++) {
-				if(Locations.get(i).getWell() != null) {
-					tempDist = DistanceTo(getLocation(Locations.get(i).getWell().getPoint()));
-					nextDist = DistanceTo(Locations.get(i),startLoc);
-					statDist = DistanceTo(Locations.get(i),getNearestStation(Locations.get(i)))*WEIGHT_WELL_STATION;
+			for(int i = 0;i<Fleet.Locations.size();i++) {
+				if(Fleet.Locations.get(i).getWell() != null) {
+					tempDist = DistanceTo(getLocation(Fleet.Locations.get(i).getWell().getPoint()));
+					nextDist = DistanceTo(Fleet.Locations.get(i),startLoc);
+					statDist = DistanceTo(Fleet.Locations.get(i),getNearestStation(Fleet.Locations.get(i)))*WEIGHT_WELL_STATION;
 					tempDist = tempDist + statDist + nextDist*0.5;
 					if(tempDist<= smallestDist) {
 						smallestDist = tempDist;
-						BestLoc = Locations.get(i);
+						BestLoc = Fleet.Locations.get(i);
 					}else if (tempDist == smallestDist){
 						//check closest to current refuel if equal
 					}
@@ -651,9 +659,9 @@ public class JoelTanker extends Tanker{
 	
 	//get generic location
 	public Location getLocation(Point p) {
-		for(int i = 0;i<Locations.size();i++) {
-			if(Locations.get(i).getPoint().equals(p)) {
-				return Locations.get(i);
+		for(int i = 0;i<Fleet.Locations.size();i++) {
+			if(Fleet.Locations.get(i).getPoint().equals(p)) {
+				return Fleet.Locations.get(i);
 			}
 		}
 		return null;
@@ -661,9 +669,9 @@ public class JoelTanker extends Tanker{
 	
 	//get a station with point = p
 	public Station getStation(Point p) {
-		for(int i = 0;i<Locations.size();i++) {
-			if(Locations.get(i).getPoint().equals(p)) {
-				return Locations.get(i).getStation();
+		for(int i = 0;i<Fleet.Locations.size();i++) {
+			if(Fleet.Locations.get(i).getPoint().equals(p)) {
+				return Fleet.Locations.get(i).getStation();
 			}
 		}
 		return null;
@@ -671,9 +679,9 @@ public class JoelTanker extends Tanker{
 	
 	//gets a stationID from the station with point = p
 	public int getStationID(Point p) {
-		for(int i = 0;i<Locations.size();i++) {
-			if(Locations.get(i).getPoint().equals(p)) {
-				return Locations.get(i).getID();
+		for(int i = 0;i<Fleet.Locations.size();i++) {
+			if(Fleet.Locations.get(i).getPoint().equals(p)) {
+				return Fleet.Locations.get(i).getID();
 			}
 		}
 		return -1;
@@ -681,9 +689,9 @@ public class JoelTanker extends Tanker{
 	
 	//get a well with point = p;
 	public Well getWell(Point p) {
-		for(int i = 0;i<Locations.size();i++) {
-			if(Locations.get(i).getPoint().equals(p)) {
-				return Locations.get(i).getWell();
+		for(int i = 0;i<Fleet.Locations.size();i++) {
+			if(Fleet.Locations.get(i).getPoint().equals(p)) {
+				return Fleet.Locations.get(i).getWell();
 			}
 		}
 		return null;
@@ -691,9 +699,9 @@ public class JoelTanker extends Tanker{
 	
 	//gets a pump with point = p
 	public FuelPump getPump(Point p) {
-		for(int i = 0;i<Locations.size();i++) {
-			if(Locations.get(i).getPoint().equals(p)) {
-				return Locations.get(i).getPump();
+		for(int i = 0;i<Fleet.Locations.size();i++) {
+			if(Fleet.Locations.get(i).getPoint().equals(p)) {
+				return Fleet.Locations.get(i).getPump();
 			}
 		}
 		return null;
@@ -754,7 +762,7 @@ public class JoelTanker extends Tanker{
 	}
 	
 	//scans the visible area; updates and adds found location features
-	private void ScanArea(Cell[][] view) {
+	public void ScanArea(Cell[][] view) {
 		//scan the viewable area for stations and wells
 		// save them in an arraylist of locations to store them for later
 		for(int i = 0;i < this.VIEW_RANGE*2;i++) {
@@ -764,55 +772,56 @@ public class JoelTanker extends Tanker{
 					//if(getStation(station.getPoint()) == null) {
 						int id = getStationID(station.getPoint());
 						if(id != -1) {
-							Locations.set(id, new Location(station,station.getPoint(),j-20+currentX,20-i+currentY,id));
+							
+							Fleet.Locations.set(id, new Location(station,station.getPoint(),j-20+currentX,20-i+currentY,getLocation(station.getPoint()).bTaskTaken,id));
 						}else {
-							Locations.add(new Location(station,station.getPoint(),j-20+currentX,20-i+currentY,Locations.size()));
+							Fleet.Locations.add(new Location(station,station.getPoint(),j-20+currentX,20-i+currentY,false,Fleet.Locations.size()));
 							boolean bAdded = false;
 							for(int k = 0;k<Clusters.size();k++) {
-								if(DistanceTo(Locations.get(Locations.size()-1),Clusters.get(k).getCentreLocation()) <=10){
-									Clusters.get(k).AddLocation(Locations.get(Locations.size()-1));
+								if(DistanceTo(Fleet.Locations.get(Fleet.Locations.size()-1),Clusters.get(k).getCentreLocation()) <=10){
+									Clusters.get(k).AddLocation(Fleet.Locations.get(Fleet.Locations.size()-1));
 									bAdded = true;
 								}
 							}
 							if(bAdded == false) {
 							
 								Clusters.add(new Cluster());
-								Clusters.get(Clusters.size()-1).AddLocation(Locations.get(Locations.size()-1));;
+								Clusters.get(Clusters.size()-1).AddLocation(Fleet.Locations.get(Fleet.Locations.size()-1));;
 							}
 						}
 					//}
 				}else if(view[j][i] instanceof Well) {
 					Well well = (Well)view[j][i];
 					if(getWell(well.getPoint()) == null) {
-						Locations.add(new Location(well,well.getPoint(),j-20+currentX,20-i+currentY));
+						Fleet.Locations.add(new Location(well,well.getPoint(),j-20+currentX,20-i+currentY));
 					}
 				}else if(view[j][i] instanceof FuelPump) {
 					FuelPump pump = (FuelPump)view[j][i];
 					if(getPump(pump.getPoint()) == null) {
 						pumpsFound += 1;
-						Locations.add(new Location(pump,pump.getPoint(),j-20+currentX,20-i+currentY));
+						Fleet.Locations.add(new Location(pump,pump.getPoint(),j-20+currentX,20-i+currentY));
 					}
 				}
 			}
 		}
 		
-		for(int i = 0;i<Locations.size();i++) {
-			if(Locations.get(i).getStation() != null) {
-				Station station = Locations.get(i).getStation();
+		for(int i = 0;i<Fleet.Locations.size();i++) {
+			if(Fleet.Locations.get(i).getStation() != null) {
+				Station station = Fleet.Locations.get(i).getStation();
 				Task task = station.getTask();
 				if(task != null) {
 					boolean bExists = false;
-					for(int j = 0;j<AvailableTasks.size();j++) {
-						if(task.equals(AvailableTasks.get(j))) {
+					for(int j = 0;j<Fleet.AvailableTasks.size();j++) {
+						if(task.equals(Fleet.AvailableTasks.get(j))) {
 							bExists = true;
-							if(AvailableTasks.get(j).isComplete()) {
-								AvailableTasks.remove(j);
+							if(Fleet.AvailableTasks.get(j).isComplete()) {
+								Fleet.AvailableTasks.remove(j);
 							}
 							break;
 						}
 					}
 					if(!bExists) {
-						AvailableTasks.add(task);
+						Fleet.AvailableTasks.add(task);
 					}
 				}
 			}
@@ -820,15 +829,15 @@ public class JoelTanker extends Tanker{
 	}
 	
 	//updates nearest wells for clusters
-	private void UpdateClusterWells() {
+	public void UpdateClusterWells() {
 		
 		for(int i = 0;i<Clusters.size();i++) {
 			double smallestDist = 99999;
-			for(int j = 0;j<Locations.size();j++){
-				if(Locations.get(j).getWell()!= null) {
-					if(DistanceTo(Locations.get(j),Clusters.get(i).getCentreLocation()) <= smallestDist){
-						smallestDist = DistanceTo(Locations.get(j),Clusters.get(i).getCentreLocation());
-						Clusters.get(i).setWell(Locations.get(i));
+			for(int j = 0;j<Fleet.Locations.size();j++){
+				if(Fleet.Locations.get(j).getWell()!= null) {
+					if(DistanceTo(Fleet.Locations.get(j),Clusters.get(i).getCentreLocation()) <= smallestDist){
+						smallestDist = DistanceTo(Fleet.Locations.get(j),Clusters.get(i).getCentreLocation());
+						Clusters.get(i).setWell(Fleet.Locations.get(i));
 					}
 				}
 			}

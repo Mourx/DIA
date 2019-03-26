@@ -754,7 +754,7 @@ public class JoelTanker extends Tanker{
 	}
 	
 	//scans the visible area; updates and adds found location features
-	private void ScanArea(Cell[][] view) {
+	public void ScanArea(Cell[][] view) {
 		//scan the viewable area for stations and wells
 		// save them in an arraylist of locations to store them for later
 		for(int i = 0;i < this.VIEW_RANGE*2;i++) {
@@ -820,7 +820,7 @@ public class JoelTanker extends Tanker{
 	}
 	
 	//updates nearest wells for clusters
-	private void UpdateClusterWells() {
+	public void UpdateClusterWells() {
 		
 		for(int i = 0;i<Clusters.size();i++) {
 			double smallestDist = 99999;
