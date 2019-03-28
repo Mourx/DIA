@@ -84,7 +84,7 @@ public class MultiSimulator {
     	System.out.println("Seed: "+i+" Simulation completed at timestep " + env.getTimestep() + " , score: " + fleet.getScore());
 		total+= fleet.getScore();
 	}
-	total = total/400;
+	total = total/30;
 	System.out.println("Average over 30: " + total);
     }
 }

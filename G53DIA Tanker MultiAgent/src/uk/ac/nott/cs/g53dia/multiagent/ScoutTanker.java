@@ -26,6 +26,12 @@ public class ScoutTanker extends JoelTanker {
 	
 	@Override
  	public Action senseAndAct(Cell[][] view, boolean actionFailed, long timestep) {
+		Initialise(view);
+		
+		stepNumber++;
+
+		ScanArea(view);
+		UpdateClusterWells();
 		return null;
 	}
 }
