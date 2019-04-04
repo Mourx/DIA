@@ -26,10 +26,12 @@ public class LonelyTanker extends JoelTanker {
 	public LonelyTanker(Random r, JoelFleet fleet) {
 		this.r = r;
 		Fleet = fleet;
+		exploreSteps = 400;
+	
 	}
 	
 	int WEIGHT_NEARBY_TANKER = 10;
-
+	
 	
 	@Override
  	public Action senseAndAct(Cell[][] view, boolean actionFailed, long timestep) {

@@ -62,8 +62,9 @@ public class MultiSimulator {
     		// Advance the environment timestep
     		env.tick();
     		// Update the GUI
-    		//fv.tick(env);
-    		for (Tanker t:fleet) {
+    		//]fv.tick(env);
+    		for (int j = 0;j<fleet.size();j++) {
+    			Tanker t = fleet.get(j);
     			// Get the current view of the tanker
     			Cell[][] view = env.getView(t.getPosition(), Tanker.VIEW_RANGE);
     			// Let the tanker choose an action

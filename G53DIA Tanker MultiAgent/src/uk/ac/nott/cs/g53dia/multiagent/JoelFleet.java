@@ -8,10 +8,13 @@ public class JoelFleet extends Fleet {
     /** 
      * Number of tankers in the fleet (this is just an example, not a requirement).
      */
-    private static int EFFICIENT_TANKERS_SIZE = 1;
+    private static int EFFICIENT_TANKERS_SIZE = 0;
     private static int SCOUT_TANKERS_SIZE = 0;
     private static int LONELY_TANKERS_SIZE = 0;
-    private static int LONELY_SCOUT_TANKERS_SIZE = 2;
+    private static int LONELY_SCOUT_TANKERS_SIZE = 0;
+    private static int RECRUIT_SCOUT_TANKERS_SIZE = 1;
+    private static int LEASH_TANKERS_SIZE = 0;
+    
     
     public JoelFleet() {
     	this(new Random());
@@ -37,6 +40,10 @@ public class JoelFleet extends Fleet {
 		}
 		for (int i=0; i<LONELY_SCOUT_TANKERS_SIZE; i++) {
 			this.add(new LonelyTanker(r,this));
+		}
+		for (int i= 0;i<RECRUIT_SCOUT_TANKERS_SIZE; i++) {
+			this.add(new LonelyScoutRecruitTanker(r,this));
+
 		}
     }
     

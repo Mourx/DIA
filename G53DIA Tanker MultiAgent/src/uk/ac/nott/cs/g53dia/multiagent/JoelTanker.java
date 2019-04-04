@@ -35,7 +35,7 @@ public class JoelTanker extends Tanker{
 		Fleet = fleet;
 	}
 	
-	private Point currentPoint;
+	protected Point currentPoint;
 	int pumpsFound = 0;
 	Task currentTask = null;
 	
