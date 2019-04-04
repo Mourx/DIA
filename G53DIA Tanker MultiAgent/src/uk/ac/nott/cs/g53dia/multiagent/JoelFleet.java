@@ -8,7 +8,10 @@ public class JoelFleet extends Fleet {
     /** 
      * Number of tankers in the fleet (this is just an example, not a requirement).
      */
-    private static int FLEET_SIZE = 3;
+    private static int EFFICIENT_TANKERS_SIZE = 1;
+    private static int SCOUT_TANKERS_SIZE = 0;
+    private static int LONELY_TANKERS_SIZE = 0;
+    private static int LONELY_SCOUT_TANKERS_SIZE = 2;
     
     public JoelFleet() {
     	this(new Random());
@@ -23,10 +26,20 @@ public class JoelFleet extends Fleet {
 	 */
     public JoelFleet(Random r) {
 	// Create the tankers
-	for (int i=0; i<FLEET_SIZE; i++) {
-	    this.add(new EfficientTanker(r,this));
+		for (int i=0; i<EFFICIENT_TANKERS_SIZE; i++) {
+		    this.add(new EfficientTanker(r,this));
+		}
+		for (int i=0; i<SCOUT_TANKERS_SIZE; i++) {
+			this.add(new ScoutTanker(r,this));
+		}
+		for (int i=0; i<LONELY_TANKERS_SIZE; i++) {
+			this.add(new LonelyTanker(r,this));
+		}
+		for (int i=0; i<LONELY_SCOUT_TANKERS_SIZE; i++) {
+			this.add(new LonelyTanker(r,this));
 		}
     }
+    
     public ArrayList<Task> AvailableTasks = new ArrayList<Task>();
 	public ArrayList<Location> Locations = new ArrayList<Location>();
 	public void ClaimTask(int ID) {
@@ -34,5 +47,24 @@ public class JoelFleet extends Fleet {
 	}
 	public void DropTask(int ID) {
 		Locations.get(ID).setTaken(false);
+	}
+	
+	public double getNearbyTankerDistance(Location here) {
+		double tempDist = 0;
+		double bestDist = 9999999;
+		for(int i = 0;i<this.size();i++) {
+			if(!this.get(i).equals(here)) {
+				JoelTanker tanker = (JoelTanker) this.get(i);
+				double xDiff = Math.abs(here.x - tanker.currentX);
+				double yDiff = Math.abs(here.y - tanker.currentY);
+				tempDist = xDiff > yDiff ? xDiff : yDiff;
+				
+				if(tempDist < bestDist) {
+					bestDist = tempDist;
+				}
+			}
+		}
+		
+		return bestDist;
 	}
 }

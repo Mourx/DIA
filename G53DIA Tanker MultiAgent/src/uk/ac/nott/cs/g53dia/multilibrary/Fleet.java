@@ -19,4 +19,15 @@ public class Fleet extends ArrayList<Tanker> {
 	// Return the average score for each tanker 
 	return disposed / this.size();
     }
+    
+    public long getTotal() {
+    	int disposed = 0;
+		
+    	for (Tanker t:this) {
+    	    disposed += t.wasteDisposed;    
+    	}
+    		
+    	// Return the average score for each tanker 
+    	return disposed;
+    }
 }

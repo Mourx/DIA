@@ -44,7 +44,9 @@ public class MultiSimulator {
 
     public static void main(String[] args) {
     	int total =0;
-    	for(int i = 0;i<10;i++) {
+    	int waste = 0;
+    	int runs = 30;
+    	for(int i = 0;i<runs;i++) {
 
     	// Note: to obtain reproducible behaviour, you can set the Random seed
     	Random r = new Random(i);
@@ -81,11 +83,13 @@ public class MultiSimulator {
     			} catch (Exception e) { }
     		}
     	}
-    	System.out.println("Seed: "+i+" Simulation completed at timestep " + env.getTimestep() + " , score: " + fleet.getScore());
+    	System.out.println("Seed: "+i+" Simulation completed at timestep " + env.getTimestep() + " , score: " + fleet.getScore() + ", Total waste: " + fleet.getTotal());
 		total+= fleet.getScore();
+		waste += fleet.getTotal();
 	}
-	total = total/30;
-	System.out.println("Average over 30: " + total);
+	total = total/runs;
+	waste = waste/runs;
+	System.out.println("Average over "+runs+": " + total + ", Average waste: "+waste);
     }
 }
 
