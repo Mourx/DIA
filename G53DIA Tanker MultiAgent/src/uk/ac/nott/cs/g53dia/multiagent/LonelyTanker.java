@@ -26,7 +26,7 @@ public class LonelyTanker extends JoelTanker {
 	public LonelyTanker(Random r, JoelFleet fleet) {
 		this.r = r;
 		Fleet = fleet;
-		exploreSteps = 400;
+		exploreSteps = EXPLORE_LIMIT;
 	
 	}
 	

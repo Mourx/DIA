@@ -125,16 +125,6 @@ public class JoelTanker extends Tanker{
 			}
 			
 		}else {
-			if(bHomeTime) {
-				Action action = CustomMoveToward(startLoc);
-				if(action!=null) {
-					return action;
-					
-				}else {
-					//stepNumber = 0;
-					bHomeTime = false;
-				}
-			}
 			if(!bHomeTime){
 				MovesToFuel+= 1;
 				incrementXY(Direction);
@@ -190,18 +180,9 @@ public class JoelTanker extends Tanker{
 	public void UpdateTask() {
 		if(currentTask != null && DistanceTo(getLocation(currentTask.getStationPosition())) >= 15) {
 			Fleet.DropTask(getStationID(currentTask.getStationPosition()));
-			if(!bHomeTime) {
-				currentTask = getBestTask();
-			}else {
-				currentTask = getBestTaskHOME();
-			}
+			currentTask = getBestTask();
 		}else if(currentTask == null){
-			if(!bHomeTime) {
-				currentTask = getBestTask();
-			}else {
-				//return JoelMoveToward(startLoc);
-				currentTask = getBestTaskHOME();
-			}
+			currentTask = getBestTask();
 		}
 		if(currentTask != null) {
 			Fleet.ClaimTask(getStationID(currentTask.getStationPosition()));
@@ -302,15 +283,9 @@ public class JoelTanker extends Tanker{
 	//moves toward wells and disposes of waste if necessary
 	public Action DisposeWasteAction() {
 		Task tempTask;
-
-		if(bHomeTime) {
-			tempTask = getBestTaskHOME();
-			targetWell = getNearestWellLocation(getStation(tempTask.getStationPosition()));
-		}else {
-			tempTask = getBestTask();
-			Point point = tempTask.getStationPosition();
-			targetWell = getNearestWellLocation(getStation(point));
-		}
+		tempTask = getBestTask();
+		Point point = tempTask.getStationPosition();
+		targetWell = getNearestWellLocation(getStation(point));
 		bDisposeTime = true;
 		
 		//Make sure we can reach the well
@@ -345,16 +320,7 @@ public class JoelTanker extends Tanker{
 	
 	//moves toward other locations 
 	public Action MoveAroundAction() {
-		if(bHomeTime) {
-			Action action = CustomMoveToward(startLoc);
-			if(action!=null) {
-				return action;
-				
-			}else {
-				//stepNumber = 0;
-				bHomeTime = false;
-			}
-		}
+		
 		if(!bHomeTime){
 			MovesToFuel+= 1;
 			incrementXY(Direction);
@@ -559,51 +525,7 @@ public class JoelTanker extends Tanker{
 		}
 		return bestTask;
 	}
-	
-	//getBestTask but with alternative biases; used for Home Mode
-	public Task getBestTaskHOME() {
-		double smallestDist = 9999;
-		double tempDist = 0;
-		double nextDist = 0;
-		double pumpDist = 0;
-		double wasteEff = 0;
-		double bestPumpDist = 0;
-		Task candTask;
-		Task bestTask = currentTask;
-		if(currentTask !=null && CheckIfInRange(getLocation(currentTask.getStationPosition()))) bestTask = currentTask;
-		if(Fleet.AvailableTasks != null)
-		for(int i = 0;i<Fleet.AvailableTasks.size();i++) {
-			candTask = Fleet.AvailableTasks.get(i);
-			if(CheckIfInRange(Fleet.Locations.get(getStationID(candTask.getStationPosition()))) && 
-						candTask.getWasteRemaining() >0) {
-				if (bestTask == null) {
-					bestTask = candTask;
-				}else {
-					if(candTask.getWasteRemaining() > MIN_WASTE) {
-						
-						Station candStation = getStation(candTask.getStationPosition());
-						Location candStationLocation = getLocation(candStation.getPoint());
-						Location candWellLocation = getNearestWellLocation(candStation);
-						tempDist = DistanceTo(candStationLocation) * WEIGHT_DISTANCE;
-						nextDist = DistanceTo(candStationLocation,startLoc) * WEIGHT_HOME;
-						pumpDist = DistanceTo(candStationLocation,getNearestPump(candStationLocation))*WEIGHT_PUMP;
-						wasteEff = 1.0/candTask.getWasteRemaining() * WEIGHT_WASTE;
-						if(getBestPump()!= null) {
-							bestPumpDist = DistanceTo(getBestPump()) * WEIGHT_BEST_PUMP;
-						}else {
-							bestPumpDist = 0;
-						}
-						tempDist = tempDist + nextDist + pumpDist + wasteEff + bestPumpDist;
-						if(tempDist<= smallestDist) { 
-							smallestDist = tempDist; 
-							bestTask = candTask;
-						}
-					}
-				}	
-			}
-		}
-		return bestTask;
-	}
+
 	
 	//get the nearest well to the station
 	public Location getNearestWellLocation(Station station) {
@@ -630,33 +552,7 @@ public class JoelTanker extends Tanker{
 		
 		return BestLoc;
 	}
-	
-	//get the nearest well to the station
-	public Location getNearestWellLocationHOMETIME(Station station) {
-			double smallestDist = 9999;
-			double tempDist = 0;
-			double nextDist = 0;
-			double statDist = 0;
-			Location BestLoc = null;
-			Location loc = getLocation(station.getPoint());
-			for(int i = 0;i<Fleet.Locations.size();i++) {
-				if(Fleet.Locations.get(i).getWell() != null) {
-					tempDist = DistanceTo(getLocation(Fleet.Locations.get(i).getWell().getPoint()));
-					nextDist = DistanceTo(Fleet.Locations.get(i),startLoc);
-					statDist = DistanceTo(Fleet.Locations.get(i),getNearestStation(Fleet.Locations.get(i)))*WEIGHT_WELL_STATION;
-					tempDist = tempDist + statDist + nextDist*0.5;
-					if(tempDist<= smallestDist) {
-						smallestDist = tempDist;
-						BestLoc = Fleet.Locations.get(i);
-					}else if (tempDist == smallestDist){
-						//check closest to current refuel if equal
-					}
-				}
-			}
-			
-			return BestLoc;
-		}
-	
+
 	//get generic location
 	public Location getLocation(Point p) {
 		for(int i = 0;i<Fleet.Locations.size();i++) {

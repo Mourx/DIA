@@ -53,6 +53,9 @@ public class LonelyScoutRecruitTanker extends JoelTanker {
 			incrementXY(Direction);
 			return new MoveAction(Direction);
 		}else {
+ 			if(Fleet.size() == 1) {
+				Fleet.add(new LonelyTanker(r,Fleet));
+			}
 			if(exploreSteps < 400) {
 				exploreSteps = 400;
 			}
@@ -202,9 +205,11 @@ public class LonelyScoutRecruitTanker extends JoelTanker {
 					if(getPump(pump.getPoint()) == null) {
 						pumpsFound += 1;
 						Fleet.Locations.add(new Location(pump,pump.getPoint(),j-20+currentX,20-i+currentY));
-						if(stepNumber <=1500 & Fleet.size() < pumpsFound && Fleet.size() < MAX_FLEET_SIZE) {
+						if(stepNumber <=1500 && Fleet.size() < pumpsFound && Fleet.size() < MAX_FLEET_SIZE) {
+							if(DistanceTo(FuelPumpLocation,getLocation(pump.getPoint())) >20) {
 							//Fleet.add(new LeashTanker(r,Fleet,Fleet.Locations.get(Fleet.Locations.size()-1)));
-							Fleet.add(new LonelyTanker(r,Fleet));
+								Fleet.add(new LonelyTanker(r,Fleet));
+							}
 						}
 					}
 				}
