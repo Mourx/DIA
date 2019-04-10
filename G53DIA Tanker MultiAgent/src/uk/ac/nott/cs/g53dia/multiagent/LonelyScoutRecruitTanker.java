@@ -206,7 +206,7 @@ public class LonelyScoutRecruitTanker extends JoelTanker {
 						pumpsFound += 1;
 						Fleet.Locations.add(new Location(pump,pump.getPoint(),j-20+currentX,20-i+currentY));
 						if(stepNumber <=1500 && Fleet.size() < pumpsFound && Fleet.size() < MAX_FLEET_SIZE) {
-							if(DistanceTo(FuelPumpLocation,getLocation(pump.getPoint())) >20) {
+							if(DistanceTo(FuelPumpLocation,getLocation(pump.getPoint())) >21) {
 							//Fleet.add(new LeashTanker(r,Fleet,Fleet.Locations.get(Fleet.Locations.size()-1)));
 								Fleet.add(new LonelyTanker(r,Fleet));
 							}
