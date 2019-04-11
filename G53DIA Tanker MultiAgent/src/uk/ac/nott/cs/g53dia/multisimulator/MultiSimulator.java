@@ -90,7 +90,7 @@ public class MultiSimulator {
 	}
 	total = total/runs;
 	waste = waste/runs;
-	System.out.println("Average over "+runs+": " + total + ", Average waste: "+waste);
+	System.out.println("Average over "+runs+": " + total + ", Average waste: "+waste+ " loneliness 150");
     }
 }
 

@@ -25,11 +25,13 @@ public class LonelyScoutRecruitTanker extends JoelTanker {
 	public LonelyScoutRecruitTanker(Random r, JoelFleet fleet) {
 		this.r = r;
 		Fleet = fleet;
+		exploreSteps = 400;
+
 	}
-	int WEIGHT_NEARBY_TANKER = 10;
+	int WEIGHT_NEARBY_TANKER = 150;
 	int MAX_FLEET_SIZE = 10;
 
-	int SCOUT_STEPS = 1500;
+	int SCOUT_STEPS = 0;
 	@Override
  	public Action senseAndAct(Cell[][] view, boolean actionFailed, long timestep) {
 		Initialise(view);
