@@ -30,7 +30,7 @@ public class LonelyTanker extends JoelTanker {
 	
 	}
 	
-	int WEIGHT_NEARBY_TANKER = 150;
+	int WEIGHT_NEARBY_TANKER = 300;
 	
 	
 	@Override

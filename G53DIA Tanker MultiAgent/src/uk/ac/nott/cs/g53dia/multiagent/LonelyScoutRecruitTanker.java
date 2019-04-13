@@ -25,12 +25,12 @@ public class LonelyScoutRecruitTanker extends JoelTanker {
 	public LonelyScoutRecruitTanker(Random r, JoelFleet fleet) {
 		this.r = r;
 		Fleet = fleet;
-		exploreSteps = 0;
+		exploreSteps = EXPLORE_LIMIT;
 
 	}
-	int WEIGHT_NEARBY_TANKER = 150;
+	int WEIGHT_NEARBY_TANKER = 300;
 	int MAX_FLEET_SIZE = 10;
-
+	int ADD_STEPS = 750;
 	int SCOUT_STEPS = EXPLORE_LIMIT;
 	@Override
  	public Action senseAndAct(Cell[][] view, boolean actionFailed, long timestep) {
@@ -207,7 +207,7 @@ public class LonelyScoutRecruitTanker extends JoelTanker {
 					if(getPump(pump.getPoint()) == null) {
 						pumpsFound += 1;
 						Fleet.Locations.add(new Location(pump,pump.getPoint(),j-20+currentX,20-i+currentY));
-						if(stepNumber <=1500 && Fleet.size() < pumpsFound && Fleet.size() < MAX_FLEET_SIZE) {
+						if(stepNumber <=ADD_STEPS && Fleet.size() < pumpsFound && Fleet.size() < MAX_FLEET_SIZE) {
 							if(DistanceTo(FuelPumpLocation,getLocation(pump.getPoint())) >21) {
 							//Fleet.add(new LeashTanker(r,Fleet,Fleet.Locations.get(Fleet.Locations.size()-1)));
 								Fleet.add(new LonelyTanker(r,Fleet));
