@@ -412,6 +412,7 @@ public class JoelTanker extends Tanker{
 		}
 	}
 	
+// These two functions get the the nearest pump to a specific location, or the tanker's current location.
 	public Location getNearestPump(Location here) {
 		int smallestDist = DistanceTo(here);
 		int tempDist = 0;
@@ -544,8 +545,6 @@ public class JoelTanker extends Tanker{
 				if(tempDist<= smallestDist) {
 					smallestDist = tempDist;
 					BestLoc = Fleet.Locations.get(i);
-				}else if (tempDist == smallestDist){
-					//check closest to current refuel if equal
 				}
 			}
 		}
@@ -553,6 +552,9 @@ public class JoelTanker extends Tanker{
 		return BestLoc;
 	}
 
+	
+//The Following Functions all use a Point to identify within the
+// Locations arraylist the matching Location, and return relevant types
 	//get generic location
 	public Location getLocation(Point p) {
 		for(int i = 0;i<Fleet.Locations.size();i++) {
@@ -603,6 +605,9 @@ public class JoelTanker extends Tanker{
 		return null;
 	}
 	
+	
+	// This function checks the direction needed to travel towards a location
+	// and uses it to use a MoveAction - always 2 fuel, never fails - to move 
 	//uses MoveActions to reliably move toward a location
 	public MoveAction CustomMoveToward(Location loc) {
 		int diffX = currentX-loc.getX();
@@ -665,10 +670,10 @@ public class JoelTanker extends Tanker{
 			for(int j = 0;j < this.VIEW_RANGE*2;j++) {
 				if(view[j][i] instanceof Station) {
 					Station station = (Station)view[j][i];
-					//if(getStation(station.getPoint()) == null) {
 						int id = getStationID(station.getPoint());
+						// checks if the location is new (id = -1 if new)
+						// adds location if new, updates location if pre existing
 						if(id != -1) {
-							
 							Fleet.Locations.set(id, new Location(station,station.getPoint(),j-20+currentX,20-i+currentY,getLocation(station.getPoint()).bTaskTaken,id));
 						}else {
 							Fleet.Locations.add(new Location(station,station.getPoint(),j-20+currentX,20-i+currentY,false,Fleet.Locations.size()));
@@ -685,7 +690,8 @@ public class JoelTanker extends Tanker{
 								Clusters.get(Clusters.size()-1).AddLocation(Fleet.Locations.get(Fleet.Locations.size()-1));;
 							}
 						}
-					//}
+				// wells and stations just check if they exist, and only add if they don't
+				// no point updating them since they don't change
 				}else if(view[j][i] instanceof Well) {
 					Well well = (Well)view[j][i];
 					if(getWell(well.getPoint()) == null) {
@@ -701,6 +707,8 @@ public class JoelTanker extends Tanker{
 			}
 		}
 		
+		// Updates all the tasks in the Tasks arraylist
+		// adds if new, updates if changed.
 		for(int i = 0;i<Fleet.Locations.size();i++) {
 			if(Fleet.Locations.get(i).getStation() != null) {
 				Station station = Fleet.Locations.get(i).getStation();
@@ -724,6 +732,8 @@ public class JoelTanker extends Tanker{
 		}
 	}
 	
+	
+	//This isn't used in the Lonely Tankers.
 	//updates nearest wells for clusters
 	public void UpdateClusterWells() {
 		

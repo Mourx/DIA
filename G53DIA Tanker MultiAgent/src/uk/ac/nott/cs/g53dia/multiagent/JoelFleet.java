@@ -10,11 +10,17 @@ public class JoelFleet extends Fleet {
      */
     private static int EFFICIENT_TANKERS_SIZE = 0;
     private static int SCOUT_TANKERS_SIZE = 0;
-    private static int LONELY_TANKERS_SIZE = 0;
+    private static int LONELY_TANKERS_SIZE = 1;
     private static int LONELY_SCOUT_TANKERS_SIZE = 0;
     private static int RECRUIT_SCOUT_TANKERS_SIZE = 1;
     private static int LEASH_TANKERS_SIZE = 0;
-    
+    int dir = 0;
+    public void IncreaseDir() {
+    	dir++;
+    	if(dir>=4) {
+    		dir = 0;
+    	}
+    }
     
     public JoelFleet() {
     	this(new Random());

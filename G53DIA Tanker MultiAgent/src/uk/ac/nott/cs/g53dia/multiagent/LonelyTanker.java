@@ -27,10 +27,14 @@ public class LonelyTanker extends JoelTanker {
 		this.r = r;
 		Fleet = fleet;
 		exploreSteps = EXPLORE_LIMIT;
+		// rotates clockwise what direction to go in
+		Direction = Fleet.dir;
+		Fleet.IncreaseDir();
 	
 	}
 	
-	int WEIGHT_NEARBY_TANKER = 300;
+	//loneliness bias
+	int WEIGHT_NEARBY_TANKER = 175;
 	
 	
 	@Override
@@ -44,10 +48,7 @@ public class LonelyTanker extends JoelTanker {
 			thisIntISforDebugging++;
 		}
 		Initialise(view);
-		
-			
 		ScanArea(view);
-		UpdateClusterWells();
 		CheckModes();
 
 		//don't switch if close to task
@@ -85,16 +86,6 @@ public class LonelyTanker extends JoelTanker {
 			}
 			
 		}else {
-			if(bHomeTime) {
-				Action action = CustomMoveToward(startLoc);
-				if(action!=null) {
-					return action;
-					
-				}else {
-					//stepNumber = 0;
-					bHomeTime = false;
-				}
-			}
 			if(!bHomeTime){
 				MovesToFuel+= 1;
 				incrementXY(Direction);
@@ -106,52 +97,53 @@ public class LonelyTanker extends JoelTanker {
 	}
 	
 	//gets the best Task nearby
-		public Task getBestTask() {
-			double smallestDist = 9999;
-			double tempDist = 0;
-			double nextDist = 0;
-			double pumpDist = 0;
-			double wasteEff = 0;
-			double bestPumpDist = 0;
-			double tankerDist = 0;
-			Task candTask;
-			Task bestTask = currentTask;
-			if(currentTask !=null && CheckIfInRange(getLocation(currentTask.getStationPosition()))) bestTask = currentTask;
-			if(Fleet.AvailableTasks != null)
-			for(int i = 0;i<Fleet.AvailableTasks.size();i++) {
-				candTask = Fleet.AvailableTasks.get(i);
-				if(CheckIfInRange(Fleet.Locations.get(getStationID(candTask.getStationPosition()))) &&
-															getLocation(candTask.getStationPosition()).bTaskTaken == false &&
-															candTask.getWasteRemaining() >0) {
-					if (bestTask == null) {
-						bestTask = candTask;
-					}else {
-						if(candTask.getWasteRemaining() > MIN_WASTE) {
-							
-							Station candStation = getStation(candTask.getStationPosition());
-							Location candStationLocation = getLocation(candStation.getPoint());
-							Location candWellLocation = getNearestWellLocation(candStation);
-							tempDist = DistanceTo(candStationLocation) * WEIGHT_DISTANCE;
-							nextDist = DistanceTo(candStationLocation,getNearestStation(candStationLocation))*WEIGHT_STATION;
-							pumpDist = DistanceTo(candStationLocation,getNearestPump(candStationLocation))*WEIGHT_PUMP;
-							wasteEff = 1.0/candTask.getWasteRemaining() * WEIGHT_WASTE;
-							tankerDist =  1.0/Fleet.getNearbyTankerDistance(candStationLocation) * WEIGHT_NEARBY_TANKER;
-							if(getBestPump()!= null) {
-								bestPumpDist = DistanceTo(getBestPump()) * WEIGHT_BEST_PUMP;
-							}else {
-								bestPumpDist = 0;
-							}
-							tempDist = tempDist + nextDist + pumpDist + wasteEff + bestPumpDist + tankerDist;
-							if(tempDist<= smallestDist) { 
-								smallestDist = tempDist; 
-								bestTask = candTask;
-							}
-								
-						}
-					}
+	// has extra "Loneliness" bias for choosing tasks
+	public Task getBestTask() {
+		double smallestDist = 9999;
+		double tempDist = 0;
+		double nextDist = 0;
+		double pumpDist = 0;
+		double wasteEff = 0;
+		double bestPumpDist = 0;
+		double tankerDist = 0;
+		Task candTask;
+		Task bestTask = currentTask;
+		if(currentTask !=null && CheckIfInRange(getLocation(currentTask.getStationPosition()))) bestTask = currentTask;
+		if(Fleet.AvailableTasks != null)
+		for(int i = 0;i<Fleet.AvailableTasks.size();i++) {
+			candTask = Fleet.AvailableTasks.get(i);
+			if(CheckIfInRange(Fleet.Locations.get(getStationID(candTask.getStationPosition()))) &&
+														getLocation(candTask.getStationPosition()).bTaskTaken == false &&
+														candTask.getWasteRemaining() >0) {
+				if (bestTask == null) {
+					bestTask = candTask;
+				}else {
+					if(candTask.getWasteRemaining() > MIN_WASTE) {
 						
+						Station candStation = getStation(candTask.getStationPosition());
+						Location candStationLocation = getLocation(candStation.getPoint());
+						Location candWellLocation = getNearestWellLocation(candStation);
+						tempDist = DistanceTo(candStationLocation) * WEIGHT_DISTANCE;
+						nextDist = DistanceTo(candStationLocation,getNearestStation(candStationLocation))*WEIGHT_STATION;
+						pumpDist = DistanceTo(candStationLocation,getNearestPump(candStationLocation))*WEIGHT_PUMP;
+						wasteEff = 1.0/candTask.getWasteRemaining() * WEIGHT_WASTE;
+						tankerDist =  1.0/Fleet.getNearbyTankerDistance(candStationLocation) * WEIGHT_NEARBY_TANKER;
+						if(getBestPump()!= null) {
+							bestPumpDist = DistanceTo(getBestPump()) * WEIGHT_BEST_PUMP;
+						}else {
+							bestPumpDist = 0;
+						}
+						tempDist = tempDist + nextDist + pumpDist + wasteEff + bestPumpDist + tankerDist;
+						if(tempDist<= smallestDist) { 
+							smallestDist = tempDist; 
+							bestTask = candTask;
+						}
+							
+					}
 				}
+					
 			}
-			return bestTask;
 		}
+		return bestTask;
+	}
 }
